@@ -94,6 +94,13 @@ const config: ExpoConfig = {
       }
     ],
     [
+      "expo-notifications",
+      {
+        "color": "#1E4D3A",
+        "defaultChannel": "freshness"
+      }
+    ],
+    [
       "expo-audio",
       {
         microphonePermission: "Allow $(PRODUCT_NAME) to access your microphone.",

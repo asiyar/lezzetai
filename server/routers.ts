@@ -6,6 +6,7 @@ import { invokeLLM } from "./_core/llm";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { storagePut } from "./storage";
+import * as db from "./db";
 
 const chefInput = z.object({
   request: z.string().trim().min(3).max(800),
@@ -29,6 +30,13 @@ const fallbackRecipe = {
 const scanInput = z.object({
   imageBase64: z.string().min(100).max(7_000_000),
   mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+});
+
+const sharedListInput = z.object({
+  inviteCode: z.string().trim().min(1).max(64).optional(),
+  title: z.string().trim().min(1).max(120),
+  ownerName: z.string().trim().min(1).max(80),
+  seedItems: z.array(z.string().trim().min(1).max(180)).max(80),
 });
 
 const fallbackScan: { ingredients: { name: string; category: string; confidence: "Yüksek" | "Orta" }[]; suggestedPrompt: string; safetyNote: string } = {
@@ -111,6 +119,11 @@ export const appRouter = router({
       });
       return normalizeScan(response.choices[0]?.message?.content as string | null | undefined);
     }),
+  }),
+  familyList: router({
+    bootstrap: publicProcedure.input(sharedListInput).mutation(({ input }) => db.getOrCreateFamilyList(input)),
+    get: publicProcedure.input(z.object({ inviteCode: z.string().trim().min(1).max(64) })).query(({ input }) => db.getFamilyListByCode(input.inviteCode)),
+    updateItem: publicProcedure.input(z.object({ inviteCode: z.string().trim().min(1).max(64), name: z.string().trim().min(1).max(180), checked: z.boolean(), updatedBy: z.string().trim().min(1).max(80) })).mutation(({ input }) => db.updateFamilyListItem(input)),
   }),
 });
 

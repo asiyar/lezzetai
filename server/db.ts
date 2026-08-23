@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { FamilyListItem, InsertUser, familyListItems, familyLists, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,38 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function getOrCreateFamilyList(input: { inviteCode?: string; title: string; ownerName: string; seedItems: string[] }) {
+  const db = await getDb();
+  if (!db) throw new Error("Aile listesi veritabanı şu an kullanılamıyor.");
+  let list = input.inviteCode ? (await db.select().from(familyLists).where(eq(familyLists.inviteCode, input.inviteCode)).limit(1))[0] : undefined;
+  if (!list) {
+    const inviteCode = input.inviteCode || crypto.randomUUID();
+    const result = await db.insert(familyLists).values({ inviteCode, title: input.title, ownerName: input.ownerName });
+    list = { id: Number(result[0].insertId), inviteCode, title: input.title, ownerName: input.ownerName, createdAt: new Date(), updatedAt: new Date() };
+    const uniqueSeed = [...new Set(input.seedItems.map((item) => item.trim()).filter(Boolean))].slice(0, 80);
+    if (uniqueSeed.length) await db.insert(familyListItems).values(uniqueSeed.map((name) => ({ listId: list!.id, name, checked: false, updatedBy: input.ownerName })));
+  }
+  const items = await db.select().from(familyListItems).where(eq(familyListItems.listId, list.id));
+  return { list, items };
+}
+
+export async function updateFamilyListItem(input: { inviteCode: string; name: string; checked: boolean; updatedBy: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Aile listesi veritabanı şu an kullanılamıyor.");
+  const list = (await db.select().from(familyLists).where(eq(familyLists.inviteCode, input.inviteCode)).limit(1))[0];
+  if (!list) throw new Error("Paylaşılan liste bulunamadı.");
+  const current = (await db.select().from(familyListItems).where(eq(familyListItems.listId, list.id))).find((item) => item.name === input.name);
+  if (current) await db.update(familyListItems).set({ checked: input.checked, updatedBy: input.updatedBy, updatedAt: new Date() }).where(eq(familyListItems.id, current.id));
+  else await db.insert(familyListItems).values({ listId: list.id, name: input.name, checked: input.checked, updatedBy: input.updatedBy });
+  await db.update(familyLists).set({ updatedAt: new Date() }).where(eq(familyLists.id, list.id));
+  return getFamilyListByCode(input.inviteCode);
+}
+
+export async function getFamilyListByCode(inviteCode: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Aile listesi veritabanı şu an kullanılamıyor.");
+  const list = (await db.select().from(familyLists).where(eq(familyLists.inviteCode, inviteCode)).limit(1))[0];
+  if (!list) throw new Error("Bu davet koduyla eşleşen aile listesi bulunamadı.");
+  const items = await db.select().from(familyListItems).where(eq(familyListItems.listId, list.id));
+  return { list, items };
+}

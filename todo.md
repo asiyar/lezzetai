@@ -27,3 +27,10 @@
 - [x] Ortak listedeki güncellemeleri kişiye bağlayarak gösterme deneyimini eklemek
 - [x] Kiler ürünlerine son kullanma önceliği atamak ve akıllı uyarılar sunmak
 - [x] Yeni kişisel ve aile akışlarını test etmek
+- [x] Favori malzemeler ve beslenme tercihleriyle otomatik haftalık menü oluşturmak
+- [x] Menünün kilerdeki öncelikli malzemeleri değerlendirmesini sağlamak
+- [x] Son kullanma yaklaşınca uygulama içi ve cihaz bildirimi ayarlamak
+- [x] Aile alışveriş listesi için bulut tabanlı paylaşılan liste veri modelini eklemek
+- [x] Aile üyelerinin değişikliklerini anlık yenileyen senkronizasyonu eklemek
+- [x] Aile listesini 3 saniyelik yakın gerçek zamanlı yenileme ile eşitlemek
+- [x] Otomatik menü, bildirim ve canlı liste akışlarını test etmek

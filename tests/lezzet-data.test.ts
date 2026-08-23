@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildShoppingShareMessage, uniqueShoppingItems } from "../lib/meal-planning";
+import { buildPersonalWeekPlan } from "../lib/personal-menu";
 
 describe("LezzetAI haftalık planlama", () => {
   it("planlanan öğünlerde yinelenen malzemeleri tek alışveriş kalemine indirger", () => {
@@ -21,5 +22,12 @@ describe("LezzetAI haftalık planlama", () => {
     expect(message).toContain("Haftasonu alışverişi");
     expect(message).toContain("✓ Domates");
     expect(message).toContain("○ Yoğurt");
+  });
+
+  it("kişisel haftalık menüde yedi gün üretir ve belirlenen alerjeni içeren tarifi dışarıda bırakır", () => {
+    const menuRecipes = [{ id: "nohut", title: "Nohut kasesi", subtitle: "Rokalı", ingredients: ["Nohut", "Roka"], tags: ["Vegan"], protein: 21, calories: 450, minutes: 20 }, { id: "somon", title: "Somon tabağı", subtitle: "Limonlu", ingredients: ["Somon"], tags: ["Protein"], protein: 38, calories: 560, minutes: 30 }];
+    const plan = buildPersonalWeekPlan(menuRecipes, { pantry: ["Nohut", "Roka"], favoriteIngredients: ["Roka"], goal: "Protein odağı", allergies: ["somon"] });
+    expect(plan).toHaveLength(7);
+    expect(plan.every((entry) => entry.recipeId === "nohut")).toBe(true);
   });
 });

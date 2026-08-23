@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { boolean, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -25,4 +25,23 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+export const familyLists = mysqlTable("family_lists", {
+  id: int("id").autoincrement().primaryKey(),
+  inviteCode: varchar("inviteCode", { length: 64 }).notNull().unique(),
+  title: varchar("title", { length: 120 }).notNull(),
+  ownerName: varchar("ownerName", { length: 80 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export const familyListItems = mysqlTable("family_list_items", {
+  id: int("id").autoincrement().primaryKey(),
+  listId: int("listId").notNull(),
+  name: varchar("name", { length: 180 }).notNull(),
+  checked: boolean("checked").default(false).notNull(),
+  updatedBy: varchar("updatedBy", { length: 80 }).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FamilyList = typeof familyLists.$inferSelect;
+export type FamilyListItem = typeof familyListItems.$inferSelect;
