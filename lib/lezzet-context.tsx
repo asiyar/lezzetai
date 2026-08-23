@@ -16,6 +16,7 @@ type LezzetContextValue = {
   pantryMeta: Record<string, PantryMeta>;
   scanHistory: ScanHistoryItem[];
   familyMembers: FamilyMember[];
+  kitchenTools: string[];
   sharedListInviteCode: string | null;
   grocery: GroceryItem[];
   weeklyPlan: WeeklyMeal[];
@@ -31,6 +32,7 @@ type LezzetContextValue = {
   removeScan: (id: string) => void;
   addFamilyMember: (name: string) => void;
   setSharedListInviteCode: (code: string | null) => void;
+  toggleKitchenTool: (tool: string) => void;
   toggleGrocery: (name: string) => void;
   addRecipeToPlan: (id: string) => void;
   createGroceryFromPlan: () => void;
@@ -52,6 +54,7 @@ export function LezzetProvider({ children }: PropsWithChildren) {
   const [pantryMeta, setPantryMeta] = useState<Record<string, PantryMeta>>({ Roka: { favorite: true, expiresInDays: 1 }, Domates: { favorite: false, expiresInDays: 2 }, Yoğurt: { favorite: false, expiresInDays: 4 }, Limon: { favorite: true, expiresInDays: 6 } });
   const [scanHistory, setScanHistory] = useState<ScanHistoryItem[]>([]);
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([{ id: "deniz", name: "Deniz", color: "#1E4D3A" }, { id: "ayse", name: "Ayşe", color: "#B7652E" }]);
+  const [kitchenTools, setKitchenTools] = useState<string[]>([]);
   const [sharedListInviteCode, setSharedListInviteCode] = useState<string | null>(null);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -60,7 +63,7 @@ export function LezzetProvider({ children }: PropsWithChildren) {
     AsyncStorage.getItem(STORAGE_KEY)
       .then((raw) => {
         if (!raw) return;
-        const saved = JSON.parse(raw) as Partial<{ favorites: string[]; pantry: string[]; pantryMeta: Record<string, PantryMeta>; scanHistory: ScanHistoryItem[]; familyMembers: FamilyMember[]; sharedListInviteCode: string | null; grocery: GroceryItem[]; weeklyPlan: WeeklyMeal[]; profile: Profile; onboardingComplete: boolean }>;
+        const saved = JSON.parse(raw) as Partial<{ favorites: string[]; pantry: string[]; pantryMeta: Record<string, PantryMeta>; scanHistory: ScanHistoryItem[]; familyMembers: FamilyMember[]; kitchenTools: string[]; sharedListInviteCode: string | null; grocery: GroceryItem[]; weeklyPlan: WeeklyMeal[]; profile: Profile; onboardingComplete: boolean }>;
         if (saved.favorites) setFavorites(saved.favorites);
         if (saved.pantry) setPantry(saved.pantry);
         if (saved.grocery) setGrocery(saved.grocery);
@@ -69,6 +72,7 @@ export function LezzetProvider({ children }: PropsWithChildren) {
         if (saved.pantryMeta) setPantryMeta(saved.pantryMeta);
         if (saved.scanHistory) setScanHistory(saved.scanHistory);
         if (saved.familyMembers) setFamilyMembers(saved.familyMembers);
+        if (saved.kitchenTools) setKitchenTools(saved.kitchenTools);
         if (saved.sharedListInviteCode) setSharedListInviteCode(saved.sharedListInviteCode);
         if (saved.onboardingComplete) setOnboardingComplete(true);
       })
@@ -78,9 +82,9 @@ export function LezzetProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (!hydrated) return;
-    const snapshot = JSON.stringify({ favorites, pantry, pantryMeta, scanHistory, familyMembers, sharedListInviteCode, grocery, weeklyPlan, profile, onboardingComplete });
+    const snapshot = JSON.stringify({ favorites, pantry, pantryMeta, scanHistory, familyMembers, kitchenTools, sharedListInviteCode, grocery, weeklyPlan, profile, onboardingComplete });
     AsyncStorage.setItem(STORAGE_KEY, snapshot).catch(() => undefined);
-  }, [familyMembers, favorites, grocery, hydrated, onboardingComplete, pantry, pantryMeta, profile, scanHistory, sharedListInviteCode, weeklyPlan]);
+  }, [familyMembers, favorites, grocery, hydrated, kitchenTools, onboardingComplete, pantry, pantryMeta, profile, scanHistory, sharedListInviteCode, weeklyPlan]);
 
   const toggleFavorite = useCallback((id: string) => {
     setFavorites((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
@@ -99,6 +103,7 @@ export function LezzetProvider({ children }: PropsWithChildren) {
   const recordScan = useCallback((scan: { ingredients: { name: string }[]; suggestedPrompt: string }) => setScanHistory((current) => [{ id: `${Date.now()}`, ingredients: scan.ingredients.map((item) => item.name).slice(0, 8), createdAt: "Az önce", recipePrompt: scan.suggestedPrompt }, ...current].slice(0, 8)), []);
   const removeScan = useCallback((id: string) => setScanHistory((current) => current.filter((scan) => scan.id !== id)), []);
   const addFamilyMember = useCallback((name: string) => { const cleanName = name.trim(); if (!cleanName) return; setFamilyMembers((current) => current.some((member) => member.name.toLocaleLowerCase("tr-TR") === cleanName.toLocaleLowerCase("tr-TR")) ? current : [...current, { id: `${Date.now()}`, name: cleanName, color: "#6B756F" }]); }, []);
+  const toggleKitchenTool = useCallback((tool: string) => setKitchenTools((current) => current.includes(tool) ? current.filter((item) => item !== tool) : [...current, tool]), []);
   const toggleGrocery = useCallback((name: string) => setGrocery((current) => current.map((item) => (item.name === name ? { ...item, checked: !item.checked, updatedBy: "Deniz", updatedAt: "az önce" } : item))), []);
 
   const addRecipeToPlan = useCallback((recipeId: string) => {
@@ -109,16 +114,16 @@ export function LezzetProvider({ children }: PropsWithChildren) {
   }, []);
 
   const createGroceryFromPlan = useCallback(() => setGrocery(buildGroceryList(weeklyPlan.map((item) => item.recipeId))), [weeklyPlan]);
-  const createPersonalWeeklyPlan = useCallback(() => setWeeklyPlan(buildPersonalWeeklyPlan({ pantry, favoriteIngredients: pantry.filter((item) => pantryMeta[item]?.favorite), goal: profile.goal, allergies: profile.allergies })), [pantry, pantryMeta, profile.allergies, profile.goal]);
+  const createPersonalWeeklyPlan = useCallback(() => setWeeklyPlan(buildPersonalWeeklyPlan({ pantry, favoriteIngredients: pantry.filter((item) => pantryMeta[item]?.favorite), goal: profile.goal, allergies: profile.allergies, kitchenTools })), [kitchenTools, pantry, pantryMeta, profile.allergies, profile.goal]);
   const replaceWeeklyMeal = useCallback((day: string, currentRecipeId: string) => setWeeklyPlan((current) => {
-    const input = { pantry, favoriteIngredients: pantry.filter((item) => pantryMeta[item]?.favorite), goal: profile.goal, allergies: profile.allergies };
+    const input = { pantry, favoriteIngredients: pantry.filter((item) => pantryMeta[item]?.favorite), goal: profile.goal, allergies: profile.allergies, kitchenTools };
     const replacement = getPersonalRecipeAlternative(input, currentRecipeId, current.map((item) => item.recipeId));
     return current.map((item) => item.day === day && item.recipeId === currentRecipeId ? { ...item, recipeId: replacement } : item);
-  }), [pantry, pantryMeta, profile.allergies, profile.goal]);
+  }), [kitchenTools, pantry, pantryMeta, profile.allergies, profile.goal]);
   const updateProfile = useCallback((patch: Partial<Profile>) => setProfile((current) => ({ ...current, ...patch })), []);
   const completeOnboarding = useCallback((nextProfile: Profile) => { setProfile(nextProfile); setOnboardingComplete(true); }, []);
 
-  const value = useMemo(() => ({ favorites, pantry, pantryMeta, scanHistory, familyMembers, sharedListInviteCode, grocery, weeklyPlan, profile, onboardingComplete, hydrated, toggleFavorite, addPantryItem, removePantryItem, toggleFavoriteIngredient, setExpiryPriority, recordScan, removeScan, addFamilyMember, setSharedListInviteCode, toggleGrocery, addRecipeToPlan, createGroceryFromPlan, createPersonalWeeklyPlan, replaceWeeklyMeal, updateProfile, completeOnboarding }), [addFamilyMember, addPantryItem, addRecipeToPlan, completeOnboarding, createGroceryFromPlan, createPersonalWeeklyPlan, familyMembers, favorites, grocery, hydrated, onboardingComplete, pantry, pantryMeta, profile, recordScan, removePantryItem, removeScan, replaceWeeklyMeal, setExpiryPriority, scanHistory, sharedListInviteCode, toggleFavorite, toggleFavoriteIngredient, toggleGrocery, updateProfile, weeklyPlan]);
+  const value = useMemo(() => ({ favorites, pantry, pantryMeta, scanHistory, familyMembers, kitchenTools, sharedListInviteCode, grocery, weeklyPlan, profile, onboardingComplete, hydrated, toggleFavorite, addPantryItem, removePantryItem, toggleFavoriteIngredient, setExpiryPriority, recordScan, removeScan, addFamilyMember, setSharedListInviteCode, toggleKitchenTool, toggleGrocery, addRecipeToPlan, createGroceryFromPlan, createPersonalWeeklyPlan, replaceWeeklyMeal, updateProfile, completeOnboarding }), [addFamilyMember, addPantryItem, addRecipeToPlan, completeOnboarding, createGroceryFromPlan, createPersonalWeeklyPlan, familyMembers, favorites, grocery, hydrated, kitchenTools, onboardingComplete, pantry, pantryMeta, profile, recordScan, removePantryItem, removeScan, replaceWeeklyMeal, setExpiryPriority, scanHistory, sharedListInviteCode, toggleFavorite, toggleFavoriteIngredient, toggleGrocery, toggleKitchenTool, updateProfile, weeklyPlan]);
 
   return <LezzetContext.Provider value={value}>{children}</LezzetContext.Provider>;
 }

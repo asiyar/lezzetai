@@ -11,6 +11,7 @@ export type Recipe = {
   calories: number;
   protein: number;
   difficulty: "Kolay" | "Orta";
+  tools: string[];
   image: ImageSourcePropType;
   accent: string;
   ingredients: string[];
@@ -28,6 +29,7 @@ export const recipes: Recipe[] = [
     calories: 480,
     protein: 20,
     difficulty: "Kolay",
+    tools: ["Tava", "Tencere"],
     image: require("../assets/images/food/enerji-kasesi.jpg"),
     accent: "#DDE8DA",
     ingredients: ["1 su bardağı haşlanmış nohut", "Yarım avokado", "1 küçük salatalık", "2 avuç roka", "3 yemek kaşığı tahin", "Yarım limon", "1 çay kaşığı kimyon"],
@@ -43,6 +45,7 @@ export const recipes: Recipe[] = [
     calories: 365,
     protein: 24,
     difficulty: "Kolay",
+    tools: ["Fırın", "Air Fryer"],
     image: require("../assets/images/food/firin-domates.jpg"),
     accent: "#FCE6D2",
     ingredients: ["2 yumurta", "10 çeri domates", "1 diş sarımsak", "2 yemek kaşığı yoğurt", "1 dilim tam tahıllı ekmek", "Taze fesleğen"],
@@ -58,6 +61,7 @@ export const recipes: Recipe[] = [
     calories: 420,
     protein: 16,
     difficulty: "Orta",
+    tools: ["Fırın", "Air Fryer"],
     image: require("../assets/images/food/mezze.jpg"),
     accent: "#F9E2DB",
     ingredients: ["2 patlıcan", "1 pancar", "1 kâse süzme yoğurt", "Yarım limon", "Maydanoz", "Zeytinyağı", "Taze ekmek"],
@@ -73,6 +77,7 @@ export const recipes: Recipe[] = [
     calories: 560,
     protein: 38,
     difficulty: "Orta",
+    tools: ["Fırın", "Air Fryer", "Tava"],
     image: require("../assets/images/food/akdeniz-tabagi.jpg"),
     accent: "#E0ECE8",
     ingredients: ["150 g somon", "1 küçük kabak", "1 kırmızı biber", "10 çeri domates", "Yarım limon", "Taze dereotu", "1 avuç roka"],
@@ -92,11 +97,11 @@ export const initialWeeklyPlan = [
   { day: "Per", meal: "Akşam", recipeId: "akdeniz-mezze-tabagi" },
 ];
 
-export function buildPersonalWeeklyPlan(input: { pantry: string[]; favoriteIngredients: string[]; goal: string; allergies: string[] }) {
+export function buildPersonalWeeklyPlan(input: { pantry: string[]; favoriteIngredients: string[]; goal: string; allergies: string[]; kitchenTools: string[] }) {
   return buildPersonalWeekPlan(recipes, input);
 }
 
-export function getPersonalRecipeAlternative(input: { pantry: string[]; favoriteIngredients: string[]; goal: string; allergies: string[] }, currentRecipeId: string, occupiedRecipeIds: string[]) {
+export function getPersonalRecipeAlternative(input: { pantry: string[]; favoriteIngredients: string[]; goal: string; allergies: string[]; kitchenTools: string[] }, currentRecipeId: string, occupiedRecipeIds: string[]) {
   return findPersonalMenuAlternative(recipes, input, currentRecipeId, occupiedRecipeIds);
 }
 

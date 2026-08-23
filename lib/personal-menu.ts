@@ -1,6 +1,6 @@
-export type PersonalMenuRecipe = { id: string; title: string; subtitle: string; ingredients: string[]; tags: string[]; protein: number; calories: number; minutes: number };
+export type PersonalMenuRecipe = { id: string; title: string; subtitle: string; ingredients: string[]; tags: string[]; protein: number; calories: number; minutes: number; tools: string[] };
 
-export type PersonalMenuInput = { pantry: string[]; favoriteIngredients: string[]; goal: string; allergies: string[] };
+export type PersonalMenuInput = { pantry: string[]; favoriteIngredients: string[]; goal: string; allergies: string[]; kitchenTools: string[] };
 
 export function rankPersonalRecipes(recipes: PersonalMenuRecipe[], input: PersonalMenuInput) {
   const normalize = (value: string) => value.toLocaleLowerCase("tr-TR");
@@ -14,7 +14,8 @@ export function rankPersonalRecipes(recipes: PersonalMenuRecipe[], input: Person
     return pantryScore + (goal.includes("protein") && recipe.protein >= 20 ? 4 : 0) + (goal.includes("sebze") && (text.includes("sebze") || text.includes("roka") || text.includes("pancar")) ? 4 : 0) + (goal.includes("denge") && recipe.calories >= 350 && recipe.calories <= 560 ? 2 : 0) - recipe.minutes / 100;
   };
   const safeRecipes = recipes.filter((recipe) => score(recipe) > -1000);
-  return (safeRecipes.length ? safeRecipes : recipes).slice().sort((a, b) => score(b) - score(a));
+  const equipmentMatched = input.kitchenTools.length ? safeRecipes.filter((recipe) => recipe.tools.some((tool) => input.kitchenTools.includes(tool))) : safeRecipes;
+  return (equipmentMatched.length ? equipmentMatched : safeRecipes.length ? safeRecipes : recipes).slice().sort((a, b) => score(b) - score(a));
 }
 
 export function buildPersonalWeekPlan(recipes: PersonalMenuRecipe[], input: PersonalMenuInput) {

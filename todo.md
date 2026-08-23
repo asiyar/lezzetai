@@ -37,3 +37,7 @@
 - [x] Haftalık menüde her öğün için tercih uyumlu alternatif tarif seçmek
 - [x] Tarif kartlarına tek dokunuşlu yenileme eylemi eklemek
 - [x] Alternatif tarif yenileme akışını test etmek
+- [x] Mutfak ekipmanları için görsel seçim ekranı eklemek
+- [x] Seçilen ekipmanları cihazda saklamak ve düzenlemek
+- [x] Tarif önerileri ile haftalık menüde ekipman uygunluğunu dikkate almak
+- [x] Ekipman seçimi ve ekipman uyumlu önerileri test etmek

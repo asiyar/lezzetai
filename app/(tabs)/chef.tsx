@@ -9,7 +9,7 @@ import { trpc } from "@/lib/trpc";
 const quickPrompts = ["20 dakikada akşam yemeği", "Kilerimdekilerle fikir ver", "Protein odaklı öğle yemeği"];
 
 export default function ChefScreen() {
-  const { pantry, profile } = useLezzet();
+  const { pantry, profile, kitchenTools } = useLezzet();
   const params = useLocalSearchParams<{ prompt?: string }>();
   const [request, setRequest] = useState("");
   const [result, setResult] = useState<{ title: string; description: string; prepMinutes: number; calories: number; protein: number; ingredients: string[]; steps: string[]; chefNote: string } | null>(null);
@@ -20,12 +20,12 @@ export default function ChefScreen() {
   const askChef = async (preset?: string) => {
     const prompt = (preset ?? request).trim();
     if (!prompt) { Alert.alert("Bir isteğini yaz", "Örneğin: ‘Nohut ve roka ile 20 dakikada akşam yemeği’."); return; }
-    await suggestion.mutateAsync({ request: prompt, pantry, goal: profile.goal, allergies: profile.allergies, people: profile.people });
+    await suggestion.mutateAsync({ request: prompt, pantry, goal: profile.goal, allergies: profile.allergies, people: profile.people, kitchenTools });
   };
 
   return <ScreenContainer className="flex-1" containerClassName="bg-background"><ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
     <View style={styles.hero}><View style={styles.sparkWrap}><IconSymbol name="sparkles" size={28} color="#F4A261" /></View><Text style={styles.eyebrow}>LEZZETAI AI ŞEF</Text><Text style={styles.title}>Bir fikrini yaz, mutfağını çözelim.</Text><Text style={styles.subtitle}>Elindeki malzemeleri ve hedefini hesaba katarak sana özel tarif önereyeyim.</Text></View>
-    <View style={styles.promptBox}><TextInput value={request} onChangeText={setRequest} multiline placeholder="Örn. Evde nohut, roka ve yoğurt var; hafif bir akşam yemeği istiyorum." placeholderTextColor="#839088" style={styles.input} textAlignVertical="top" /><View style={styles.promptFooter}><Text style={styles.helper}>{pantry.length} kiler malzemesi bağlama eklendi</Text><Pressable onPress={() => askChef()} disabled={suggestion.isPending} style={({ pressed }) => [styles.send, suggestion.isPending && { opacity: 0.55 }, pressed && { transform: [{ scale: 0.95 }] }]}><IconSymbol name="paperplane.fill" size={19} color="#FFFFFF" /></Pressable></View></View>
+    <View style={styles.promptBox}><TextInput value={request} onChangeText={setRequest} multiline placeholder="Örn. Evde nohut, roka ve yoğurt var; hafif bir akşam yemeği istiyorum." placeholderTextColor="#839088" style={styles.input} textAlignVertical="top" /><View style={styles.promptFooter}><Text style={styles.helper}>{pantry.length} malzeme · {kitchenTools.length ? kitchenTools.join(", ") : "ekipman seçilmedi"}</Text><Pressable onPress={() => askChef()} disabled={suggestion.isPending} style={({ pressed }) => [styles.send, suggestion.isPending && { opacity: 0.55 }, pressed && { transform: [{ scale: 0.95 }] }]}><IconSymbol name="paperplane.fill" size={19} color="#FFFFFF" /></Pressable></View></View>
     <View style={styles.quickWrap}><Text style={styles.quickTitle}>Hızlı başlat</Text><View style={styles.quickList}>{quickPrompts.map((prompt) => <Pressable key={prompt} onPress={() => { setRequest(prompt); askChef(prompt); }} style={({ pressed }) => [styles.quick, pressed && { opacity: 0.65 }]}><Text style={styles.quickText}>{prompt}</Text><IconSymbol name="chevron.right" size={17} color="#1E4D3A" /></Pressable>)}</View></View>
     {suggestion.isPending ? <View style={styles.loading}><View style={styles.loadingIcon}><IconSymbol name="sparkles" size={23} color="#1E4D3A" /></View><View><Text style={styles.loadingTitle}>Şef düşünüyor</Text><Text style={styles.loadingText}>Tercihlerine uygun, uygulanabilir bir tarif hazırlanıyor.</Text></View></View> : null}
     {suggestion.isError ? <View style={styles.error}><Text style={styles.errorTitle}>Tarif şu an hazırlanamadı.</Text><Text style={styles.errorText}>Bağlantını kontrol edip tekrar deneyebilirsin.</Text></View> : null}

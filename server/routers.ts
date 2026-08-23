@@ -14,6 +14,7 @@ const chefInput = z.object({
   goal: z.string().trim().min(1).max(120),
   allergies: z.array(z.string().trim().min(1).max(80)).max(10),
   people: z.number().int().min(1).max(8),
+  kitchenTools: z.array(z.string().trim().min(1).max(40)).max(10),
 });
 
 const fallbackRecipe = {
@@ -97,8 +98,8 @@ export const appRouter = router({
       const response = await invokeLLM({
         model: "gpt-5-mini",
         messages: [
-          { role: "system", content: "Sen LezzetAI'nin Türkçe konuşan mutfak asistanısın. Kullanıcının hedefini, kilerindekileri, kişi sayısını ve alerjenlerini dikkate al. Tıbbi veya kesin sağlık iddiaları yapma; alerjen içeren bir bileşen kullanma. Yalnızca geçerli JSON döndür: {title, description, prepMinutes, calories, protein, ingredients, steps, chefNote}. ingredients 4-8 kısa madde; steps 3-6 açık adım olmalı. Kalori ve protein değerlerinin tahmini olduğunu chefNote içinde belirtme." },
-          { role: "user", content: `İstek: ${input.request}\nKiler: ${input.pantry.join(", ") || "Belirtilmedi"}\nHedef: ${input.goal}\nKişi sayısı: ${input.people}\nKaçınılacaklar: ${input.allergies.join(", ") || "Yok"}` },
+          { role: "system", content: "Sen LezzetAI'nin Türkçe konuşan mutfak asistanısın. Kullanıcının hedefini, kilerindekileri, kişi sayısını, alerjenlerini ve seçtiği mutfak ekipmanlarını dikkate al. Yalnızca kullanıcının sahip olduğu ekipmanlarla yapılabilen tarif ve adımlar öner; ekipman belirtilmediyse temel ocak/tencere varsayımı yap. Tıbbi veya kesin sağlık iddiaları yapma; alerjen içeren bir bileşen kullanma. Yalnızca geçerli JSON döndür: {title, description, prepMinutes, calories, protein, ingredients, steps, chefNote}. ingredients 4-8 kısa madde; steps 3-6 açık adım olmalı. Kalori ve protein değerlerinin tahmini olduğunu chefNote içinde belirtme." },
+          { role: "user", content: `İstek: ${input.request}\nKiler: ${input.pantry.join(", ") || "Belirtilmedi"}\nHedef: ${input.goal}\nKişi sayısı: ${input.people}\nKaçınılacaklar: ${input.allergies.join(", ") || "Yok"}\nMevcut ekipman: ${input.kitchenTools.join(", ") || "Belirtilmedi"}` },
         ],
         response_format: { type: "json_object" },
       });
