@@ -5,6 +5,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { invokeLLM } from "./_core/llm";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
+import { storagePut } from "./storage";
 
 const chefInput = z.object({
   request: z.string().trim().min(3).max(800),
@@ -24,6 +25,39 @@ const fallbackRecipe = {
   steps: ["Nohudu baharatlarla kısa süre tavada ısıt.", "Roka ve limonu kâsede birleştir.", "Yoğurdu ince bir sos kıvamına getirip üzerine gezdir.", "Sıcak nohudu ekleyip hemen servis et."],
   chefNote: "Porsiyonu büyütmek istersen yanına tam tahıllı ekmek ekleyebilirsin.",
 };
+
+const scanInput = z.object({
+  imageBase64: z.string().min(100).max(7_000_000),
+  mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+});
+
+const fallbackScan: { ingredients: { name: string; category: string; confidence: "Yüksek" | "Orta" }[]; suggestedPrompt: string; safetyNote: string } = {
+  ingredients: [{ name: "Fotoğraftaki malzemeler", category: "Kontrol gerekli", confidence: "Orta" }],
+  suggestedPrompt: "Fotoğraftaki malzemelerle 25 dakikada dengeli bir tarif öner.",
+  safetyNote: "Tanıma tahminidir; alerjen veya içerik kararlarından önce malzemeleri kontrol et.",
+};
+
+function normalizeScan(content: string | null | undefined) {
+  if (!content) return fallbackScan;
+  try {
+    const parsed = JSON.parse(content) as Partial<typeof fallbackScan>;
+    const rawIngredients: unknown[] = Array.isArray(parsed.ingredients) ? parsed.ingredients : [];
+    const ingredients = rawIngredients
+      .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+      .map((item) => ({
+        name: typeof item.name === "string" ? item.name.trim().slice(0, 60) : "",
+        category: typeof item.category === "string" ? item.category.trim().slice(0, 40) : "Diğer",
+        confidence: (item.confidence === "Yüksek" ? "Yüksek" : "Orta") as "Yüksek" | "Orta",
+      }))
+      .filter((item) => item.name.length > 0)
+      .slice(0, 12);
+    return {
+      ingredients: ingredients.length ? ingredients : fallbackScan.ingredients,
+      suggestedPrompt: typeof parsed.suggestedPrompt === "string" && parsed.suggestedPrompt.trim() ? parsed.suggestedPrompt.trim().slice(0, 360) : fallbackScan.suggestedPrompt,
+      safetyNote: typeof parsed.safetyNote === "string" && parsed.safetyNote.trim() ? parsed.safetyNote.trim().slice(0, 220) : fallbackScan.safetyNote,
+    };
+  } catch { return fallbackScan; }
+}
 
 function normalizeChefRecipe(content: string | null | undefined) {
   if (!content) return fallbackRecipe;
@@ -61,6 +95,21 @@ export const appRouter = router({
         response_format: { type: "json_object" },
       });
       return normalizeChefRecipe(response.choices[0]?.message?.content as string | null | undefined);
+    }),
+    scanIngredients: publicProcedure.input(scanInput).mutation(async ({ input }) => {
+      const imageBytes = Buffer.from(input.imageBase64, "base64");
+      if (imageBytes.length < 100 || imageBytes.length > 5_000_000) throw new Error("Fotoğraf boyutu desteklenen sınırın dışında.");
+      const extension = input.mimeType === "image/png" ? "png" : input.mimeType === "image/webp" ? "webp" : "jpg";
+      const upload = await storagePut(`ingredient-scans/scan.${extension}`, imageBytes, input.mimeType);
+      const response = await invokeLLM({
+        model: "gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: "Sen LezzetAI'nin görsel malzeme tanıma yardımcısısın. Fotoğrafta görünen, mutfakta kullanılabilecek malzemeleri Türkçe listele. Görünmeyen veya belirsiz malzemeyi kesinmiş gibi yazma. Marka, ambalaj ve kişi isimlerini yok say. Sadece geçerli JSON döndür: {ingredients:[{name,category,confidence}],suggestedPrompt,safetyNote}. confidence yalnızca 'Yüksek' veya 'Orta' olabilir. En fazla 12 malzeme döndür. safetyNote kısa ve kullanıcıya görüntünün tahmini olduğunu hatırlatsın." },
+          { role: "user", content: [{ type: "text", text: "Bu fotoğraftaki malzemeleri tanı ve eldeki malzemelere uygun bir tarif istemi hazırla." }, { type: "image_url", image_url: { url: upload.url, detail: "low" } }] },
+        ],
+        response_format: { type: "json_object" },
+      });
+      return normalizeScan(response.choices[0]?.message?.content as string | null | undefined);
     }),
   }),
 });

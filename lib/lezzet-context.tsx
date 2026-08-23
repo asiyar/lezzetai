@@ -13,6 +13,7 @@ type LezzetContextValue = {
   grocery: GroceryItem[];
   weeklyPlan: WeeklyMeal[];
   profile: Profile;
+  onboardingComplete: boolean;
   hydrated: boolean;
   toggleFavorite: (id: string) => void;
   addPantryItem: (name: string) => void;
@@ -21,6 +22,7 @@ type LezzetContextValue = {
   addRecipeToPlan: (id: string) => void;
   createGroceryFromPlan: () => void;
   updateProfile: (patch: Partial<Profile>) => void;
+  completeOnboarding: (profile: Profile) => void;
 };
 
 const STORAGE_KEY = "lezzetai:state:v1";
@@ -32,18 +34,20 @@ export function LezzetProvider({ children }: PropsWithChildren) {
   const [grocery, setGrocery] = useState<GroceryItem[]>(buildGroceryList(initialWeeklyPlan.map((item) => item.recipeId)));
   const [weeklyPlan, setWeeklyPlan] = useState<WeeklyMeal[]>(initialWeeklyPlan);
   const [profile, setProfile] = useState<Profile>({ goal: "Dengeli beslenme", people: 2, calories: 1850, allergies: ["Fıstık"] });
+  const [onboardingComplete, setOnboardingComplete] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
       .then((raw) => {
         if (!raw) return;
-        const saved = JSON.parse(raw) as Partial<{ favorites: string[]; pantry: string[]; grocery: GroceryItem[]; weeklyPlan: WeeklyMeal[]; profile: Profile }>;
+        const saved = JSON.parse(raw) as Partial<{ favorites: string[]; pantry: string[]; grocery: GroceryItem[]; weeklyPlan: WeeklyMeal[]; profile: Profile; onboardingComplete: boolean }>;
         if (saved.favorites) setFavorites(saved.favorites);
         if (saved.pantry) setPantry(saved.pantry);
         if (saved.grocery) setGrocery(saved.grocery);
         if (saved.weeklyPlan) setWeeklyPlan(saved.weeklyPlan);
         if (saved.profile) setProfile(saved.profile);
+        if (saved.onboardingComplete) setOnboardingComplete(true);
       })
       .catch(() => undefined)
       .finally(() => setHydrated(true));
@@ -51,9 +55,9 @@ export function LezzetProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (!hydrated) return;
-    const snapshot = JSON.stringify({ favorites, pantry, grocery, weeklyPlan, profile });
+    const snapshot = JSON.stringify({ favorites, pantry, grocery, weeklyPlan, profile, onboardingComplete });
     AsyncStorage.setItem(STORAGE_KEY, snapshot).catch(() => undefined);
-  }, [favorites, grocery, hydrated, pantry, profile, weeklyPlan]);
+  }, [favorites, grocery, hydrated, onboardingComplete, pantry, profile, weeklyPlan]);
 
   const toggleFavorite = useCallback((id: string) => {
     setFavorites((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
@@ -77,8 +81,9 @@ export function LezzetProvider({ children }: PropsWithChildren) {
 
   const createGroceryFromPlan = useCallback(() => setGrocery(buildGroceryList(weeklyPlan.map((item) => item.recipeId))), [weeklyPlan]);
   const updateProfile = useCallback((patch: Partial<Profile>) => setProfile((current) => ({ ...current, ...patch })), []);
+  const completeOnboarding = useCallback((nextProfile: Profile) => { setProfile(nextProfile); setOnboardingComplete(true); }, []);
 
-  const value = useMemo(() => ({ favorites, pantry, grocery, weeklyPlan, profile, hydrated, toggleFavorite, addPantryItem, removePantryItem, toggleGrocery, addRecipeToPlan, createGroceryFromPlan, updateProfile }), [addPantryItem, addRecipeToPlan, createGroceryFromPlan, favorites, grocery, hydrated, pantry, profile, removePantryItem, toggleFavorite, toggleGrocery, updateProfile, weeklyPlan]);
+  const value = useMemo(() => ({ favorites, pantry, grocery, weeklyPlan, profile, onboardingComplete, hydrated, toggleFavorite, addPantryItem, removePantryItem, toggleGrocery, addRecipeToPlan, createGroceryFromPlan, updateProfile, completeOnboarding }), [addPantryItem, addRecipeToPlan, completeOnboarding, createGroceryFromPlan, favorites, grocery, hydrated, onboardingComplete, pantry, profile, removePantryItem, toggleFavorite, toggleGrocery, updateProfile, weeklyPlan]);
 
   return <LezzetContext.Provider value={value}>{children}</LezzetContext.Provider>;
 }

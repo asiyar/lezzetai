@@ -87,6 +87,13 @@ const config: ExpoConfig = {
   plugins: [
     "expo-router",
     [
+      "expo-image-picker",
+      {
+        "cameraPermission": "Malzemeleri tanımak için $(PRODUCT_NAME) kameraya erişmek istiyor.",
+        "photosPermission": "Malzeme fotoğrafı seçmek için $(PRODUCT_NAME) fotoğraflarınıza erişmek istiyor."
+      }
+    ],
+    [
       "expo-audio",
       {
         microphonePermission: "Allow $(PRODUCT_NAME) to access your microphone.",

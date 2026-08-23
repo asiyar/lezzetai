@@ -61,6 +61,12 @@ export default function TodayScreen() {
           </Pressable>
         </View>
 
+        <Pressable onPress={() => router.push("/scan-ingredients" as never)} style={({ pressed }) => [styles.scanBanner, pressed && styles.pressed]}>
+          <View style={styles.scanIcon}><IconSymbol name="camera.fill" size={21} color="#FFFFFF" /></View>
+          <View style={{ flex: 1 }}><Text style={styles.scanTitle}>Malzemeleri fotoğrafla tanı</Text><Text style={styles.scanText}>Çek, tanıyalım ve sana uygun tarif çıkaralım.</Text></View>
+          <IconSymbol name="chevron.right" size={20} color="#1E4D3A" />
+        </Pressable>
+
         <View style={styles.sectionWrap}>
           <SectionTitle title="Sana göre seçtik" action="Tümünü gör" onPress={() => router.push("/(tabs)/discover" as never)} />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalCards}>
@@ -110,6 +116,10 @@ const styles = StyleSheet.create({
   quickIcon: { width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "#FBF8F2" },
   quickTitle: { color: "#1E2521", fontSize: 14, fontWeight: "800" },
   quickSub: { color: "#6B756F", fontSize: 11, fontWeight: "600", marginTop: 2 },
+  scanBanner: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#FFFFFF", borderRadius: 20, borderWidth: 1, borderColor: "#C9DCC4", padding: 13, marginTop: -12 },
+  scanIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: "#1E4D3A", alignItems: "center", justifyContent: "center" },
+  scanTitle: { color: "#1E2521", fontSize: 14, fontWeight: "800" },
+  scanText: { color: "#6B756F", fontSize: 11, lineHeight: 16, marginTop: 2 },
   sectionWrap: { marginTop: 2 },
   horizontalCards: { gap: 12, paddingRight: 20 },
   pantryBanner: { flexDirection: "row", alignItems: "center", backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#EAE7E0", borderRadius: 22, padding: 14, gap: 12 },

@@ -15,3 +15,9 @@
 - [x] Tip kontrolü ve birim testlerini çalıştırmak
 - [x] Mobil ön izleme işlevselliğini doğrulamak
 - [x] Sürüm kaydı için büyük medya varlıklarını içeriklerini koruyarak optimize etmek
+- [x] İlk açılışta diyet tercihleri, alerjenler ve besin hedeflerini toplayan onboarding akışını eklemek
+- [x] Kamera veya galeriden malzeme fotoğrafı seçme deneyimini eklemek
+- [x] Fotoğraftaki malzemeleri AI Şef ile tanıyıp tarif önerisine dönüştürmek
+- [x] Alışveriş listesini cihaz paylaşım menüsünde metin olarak dışa aktarmak
+- [x] Paylaşım öncesi aile listesi başlığı ve özetini düzenleme deneyimini eklemek
+- [x] Yeni onboarding, kamera ve paylaşım akışlarını test etmek

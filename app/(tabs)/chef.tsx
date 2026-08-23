@@ -1,6 +1,6 @@
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
+import { useLocalSearchParams } from "expo-router";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { ScreenContainer } from "@/components/screen-container";
 import { useLezzet } from "@/lib/lezzet-context";
@@ -10,9 +10,12 @@ const quickPrompts = ["20 dakikada akşam yemeği", "Kilerimdekilerle fikir ver"
 
 export default function ChefScreen() {
   const { pantry, profile } = useLezzet();
+  const params = useLocalSearchParams<{ prompt?: string }>();
   const [request, setRequest] = useState("");
   const [result, setResult] = useState<{ title: string; description: string; prepMinutes: number; calories: number; protein: number; ingredients: string[]; steps: string[]; chefNote: string } | null>(null);
   const suggestion = trpc.chef.suggest.useMutation({ onSuccess: setResult });
+
+  useEffect(() => { if (params.prompt) setRequest(params.prompt); }, [params.prompt]);
 
   const askChef = async (preset?: string) => {
     const prompt = (preset ?? request).trim();
