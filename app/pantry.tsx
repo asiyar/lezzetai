@@ -1,0 +1,29 @@
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { router } from "expo-router";
+import { useState } from "react";
+
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { ScreenContainer } from "@/components/screen-container";
+import { recipes } from "@/lib/lezzet-data";
+import { useLezzet } from "@/lib/lezzet-context";
+
+export default function PantryScreen() {
+  const { pantry, addPantryItem, removePantryItem } = useLezzet();
+  const [value, setValue] = useState("");
+  const addItem = () => { if (!value.trim()) { Alert.alert("Malzeme ekle", "Kilerindeki malzemenin adını yaz."); return; } addPantryItem(value); setValue(""); };
+  return <ScreenContainer edges={["top", "bottom", "left", "right"]} className="flex-1" containerClassName="bg-background"><ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <View style={styles.header}><Pressable onPress={() => router.back()} style={({ pressed }) => [styles.back, pressed && { opacity: 0.55 }]}><IconSymbol name="chevron.left" size={23} color="#1E4D3A" /></Pressable><View style={{ flex: 1 }}><Text style={styles.eyebrow}>ELİNDEKİLER</Text><Text style={styles.title}>Kilerim</Text></View><View style={styles.count}><Text style={styles.countText}>{pantry.length}</Text></View></View>
+    <View style={styles.addBox}><Text style={styles.addTitle}>Malzeme ekle</Text><View style={styles.addRow}><TextInput value={value} onChangeText={setValue} onSubmitEditing={addItem} placeholder="Örn. kabak, mercimek" placeholderTextColor="#87918B" returnKeyType="done" style={styles.input} /><Pressable onPress={addItem} style={({ pressed }) => [styles.addButton, pressed && { opacity: 0.8 }]}><IconSymbol name="plus" size={22} color="#FFFFFF" /></Pressable></View><Text style={styles.addHint}>Malzemelerini güncel tut; AI Şef önerilerini sana göre şekillendirsin.</Text></View>
+    <View><Text style={styles.sectionTitle}>Kilerindeki malzemeler</Text><View style={styles.chips}>{pantry.map((item) => <Pressable key={item} onPress={() => removePantryItem(item)} style={({ pressed }) => [styles.chip, pressed && { opacity: 0.65 }]}><Text style={styles.chipText}>{item}</Text><IconSymbol name="xmark" size={14} color="#6B756F" /></Pressable>)}</View></View>
+    <View style={styles.tip}><View style={styles.tipIcon}><IconSymbol name="leaf.fill" size={21} color="#1E4D3A" /></View><View style={{ flex: 1 }}><Text style={styles.tipTitle}>Önce bunları değerlendir</Text><Text style={styles.tipText}>Roka ve domatesini taze kalırken kullanman iyi olur.</Text></View></View>
+    <View><Text style={styles.sectionTitle}>Kilerinden çıkan fikirler</Text><View style={styles.ideaList}>{recipes.slice(0, 2).map((recipe) => <Pressable key={recipe.id} onPress={() => router.push(`/recipe/${recipe.id}` as never)} style={({ pressed }) => [styles.idea, pressed && { opacity: 0.7 }]}><View style={styles.ideaIcon}><IconSymbol name="sparkles" size={17} color="#1E4D3A" /></View><View style={{ flex: 1 }}><Text style={styles.ideaTitle}>{recipe.title}</Text><Text style={styles.ideaText}>{recipe.minutes} dk · Kilerinden 3 malzeme kullanıyor</Text></View><IconSymbol name="chevron.right" size={18} color="#1E4D3A" /></Pressable>)}</View></View>
+  </ScrollView></ScreenContainer>;
+}
+
+const styles = StyleSheet.create({
+  content: { padding: 20, gap: 22 }, header: { flexDirection: "row", alignItems: "center", gap: 12 }, back: { width: 42, height: 42, borderRadius: 14, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#EAE7E0", justifyContent: "center", alignItems: "center" }, eyebrow: { color: "#6B756F", fontSize: 10, fontWeight: "800", letterSpacing: 1 }, title: { color: "#1E2521", fontSize: 25, lineHeight: 30, fontWeight: "800", letterSpacing: -0.55 }, count: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: "#DDE8DA" }, countText: { color: "#1E4D3A", fontSize: 15, fontWeight: "900" },
+  addBox: { backgroundColor: "#FFFFFF", borderRadius: 22, borderWidth: 1, borderColor: "#EAE7E0", padding: 15, gap: 10 }, addTitle: { color: "#1E2521", fontSize: 15, fontWeight: "800" }, addRow: { flexDirection: "row", gap: 9, alignItems: "center" }, input: { flex: 1, height: 46, borderRadius: 14, backgroundColor: "#F5F8F3", paddingHorizontal: 12, fontSize: 14, color: "#1E2521" }, addButton: { width: 46, height: 46, borderRadius: 14, backgroundColor: "#1E4D3A", alignItems: "center", justifyContent: "center" }, addHint: { color: "#6B756F", fontSize: 11, lineHeight: 16 },
+  sectionTitle: { color: "#1E2521", fontSize: 17, fontWeight: "800", marginBottom: 11 }, chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 }, chip: { flexDirection: "row", alignItems: "center", gap: 6, borderRadius: 16, backgroundColor: "#FFFFFF", paddingHorizontal: 12, paddingVertical: 9, borderWidth: 1, borderColor: "#EAE7E0" }, chipText: { color: "#1E4D3A", fontSize: 13, fontWeight: "700" },
+  tip: { flexDirection: "row", alignItems: "center", gap: 12, padding: 15, backgroundColor: "#FCE6D2", borderRadius: 20 }, tipIcon: { width: 41, height: 41, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: "#FFFFFF" }, tipTitle: { color: "#754626", fontSize: 14, fontWeight: "800" }, tipText: { color: "#9A6138", fontSize: 12, lineHeight: 17, marginTop: 2 },
+  ideaList: { gap: 9 }, idea: { minHeight: 68, flexDirection: "row", alignItems: "center", gap: 11, backgroundColor: "#FFFFFF", borderRadius: 18, borderWidth: 1, borderColor: "#EAE7E0", paddingHorizontal: 13 }, ideaIcon: { width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "#DDE8DA" }, ideaTitle: { color: "#1E2521", fontSize: 13, fontWeight: "800" }, ideaText: { color: "#6B756F", fontSize: 11, marginTop: 2 },
+});

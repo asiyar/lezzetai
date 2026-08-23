@@ -1,0 +1,26 @@
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { ScreenContainer } from "@/components/screen-container";
+import { useLezzet } from "@/lib/lezzet-context";
+
+export default function ProfileScreen() {
+  const { favorites, profile, updateProfile } = useLezzet();
+  const goals = ["Dengeli beslenme", "Kilo kontrolü", "Protein odağı"];
+  return <ScreenContainer className="flex-1" containerClassName="bg-background"><ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+    <View style={styles.profileHead}><View style={styles.largeAvatar}><Text style={styles.largeAvatarText}>D</Text></View><View><Text style={styles.name}>Deniz Kaya</Text><Text style={styles.subtitle}>LezzetAI üyesi</Text></View></View>
+    <View style={styles.stats}><View style={styles.stat}><Text style={styles.statNumber}>{favorites.length}</Text><Text style={styles.statLabel}>Kaydedilen</Text></View><View style={styles.statLine} /><View style={styles.stat}><Text style={styles.statNumber}>{profile.people}</Text><Text style={styles.statLabel}>Kişilik plan</Text></View><View style={styles.statLine} /><View style={styles.stat}><Text style={styles.statNumber}>{profile.calories}</Text><Text style={styles.statLabel}>kcal hedefi</Text></View></View>
+    <View style={styles.section}><Text style={styles.sectionTitle}>Beslenme hedefin</Text><View style={styles.goalList}>{goals.map((goal) => <Pressable key={goal} onPress={() => updateProfile({ goal })} style={({ pressed }) => [styles.goal, profile.goal === goal && styles.goalActive, pressed && { opacity: 0.7 }]}><Text style={[styles.goalText, profile.goal === goal && styles.goalTextActive]}>{goal}</Text>{profile.goal === goal ? <IconSymbol name="checkmark.circle.fill" size={18} color="#FFFFFF" /> : null}</Pressable>)}</View></View>
+    <View style={styles.section}><Text style={styles.sectionTitle}>Tercihlerin</Text><View style={styles.settings}><Setting icon="person.2.fill" label="Kişi sayısı" value={`${profile.people} kişi`} onPress={() => updateProfile({ people: profile.people === 4 ? 1 : profile.people + 1 })} /><Setting icon="flame.fill" label="Günlük enerji hedefi" value={`${profile.calories} kcal`} onPress={() => updateProfile({ calories: profile.calories === 2250 ? 1650 : profile.calories + 200 })} /><Setting icon="leaf.fill" label="Alerjenler" value={profile.allergies.join(", ")} /><Setting icon="bell.fill" label="Hatırlatıcılar" value="Açık" /></View></View>
+    <Text style={styles.privacy}>Tercihlerin yalnızca cihazında saklanır.</Text>
+  </ScrollView></ScreenContainer>;
+}
+
+function Setting({ icon, label, value, onPress }: { icon: "person.2.fill" | "flame.fill" | "leaf.fill" | "bell.fill"; label: string; value: string; onPress?: () => void }) { return <Pressable onPress={onPress} disabled={!onPress} style={({ pressed }) => [styles.setting, pressed && onPress && { opacity: 0.65 }]}><View style={styles.settingIcon}><IconSymbol name={icon} size={19} color="#1E4D3A" /></View><View style={{ flex: 1 }}><Text style={styles.settingLabel}>{label}</Text><Text style={styles.settingValue}>{value}</Text></View><IconSymbol name="chevron.right" size={18} color="#6B756F" /></Pressable>; }
+
+const styles = StyleSheet.create({
+  content: { padding: 20, paddingBottom: 32, gap: 24 }, profileHead: { flexDirection: "row", alignItems: "center", gap: 14 }, largeAvatar: { width: 64, height: 64, borderRadius: 22, backgroundColor: "#1E4D3A", borderWidth: 4, borderColor: "#DDE8DA", alignItems: "center", justifyContent: "center" }, largeAvatarText: { color: "#FFFFFF", fontSize: 25, fontWeight: "800" }, name: { color: "#1E2521", fontSize: 23, fontWeight: "800", letterSpacing: -0.4 }, subtitle: { color: "#6B756F", fontSize: 13, marginTop: 3 },
+  stats: { flexDirection: "row", backgroundColor: "#FFFFFF", borderRadius: 20, borderWidth: 1, borderColor: "#EAE7E0", paddingVertical: 16 }, stat: { flex: 1, alignItems: "center", gap: 3 }, statLine: { width: 1, backgroundColor: "#EAE7E0" }, statNumber: { color: "#1E4D3A", fontSize: 17, fontWeight: "900" }, statLabel: { color: "#6B756F", fontSize: 10, fontWeight: "700" },
+  section: { gap: 12 }, sectionTitle: { color: "#1E2521", fontSize: 17, fontWeight: "800" }, goalList: { gap: 8 }, goal: { minHeight: 50, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 15, borderRadius: 16, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#EAE7E0" }, goalActive: { backgroundColor: "#1E4D3A", borderColor: "#1E4D3A" }, goalText: { color: "#1E2521", fontSize: 14, fontWeight: "700" }, goalTextActive: { color: "#FFFFFF" },
+  settings: { backgroundColor: "#FFFFFF", borderRadius: 20, borderWidth: 1, borderColor: "#EAE7E0", overflow: "hidden" }, setting: { minHeight: 70, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: "#F0EEE9" }, settingIcon: { width: 38, height: 38, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "#DDE8DA" }, settingLabel: { color: "#1E2521", fontSize: 14, fontWeight: "800" }, settingValue: { color: "#6B756F", fontSize: 12, marginTop: 2 }, privacy: { color: "#6B756F", textAlign: "center", fontSize: 11, fontWeight: "600" },
+});

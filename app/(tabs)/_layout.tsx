@@ -28,13 +28,11 @@ export default function TabLayout() {
         },
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Home",
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
+      <Tabs.Screen name="index" options={{ title: "Bugün", tabBarIcon: ({ color }) => <IconSymbol size={24} name="house.fill" color={color} /> }} />
+      <Tabs.Screen name="discover" options={{ title: "Keşfet", tabBarIcon: ({ color }) => <IconSymbol size={24} name="safari" color={color} /> }} />
+      <Tabs.Screen name="chef" options={{ title: "AI Şef", tabBarIcon: ({ color }) => <IconSymbol size={25} name="sparkles" color={color} /> }} />
+      <Tabs.Screen name="plan" options={{ title: "Plan", tabBarIcon: ({ color }) => <IconSymbol size={24} name="calendar" color={color} /> }} />
+      <Tabs.Screen name="profile" options={{ title: "Profil", tabBarIcon: ({ color }) => <IconSymbol size={24} name="person.crop.circle" color={color} /> }} />
     </Tabs>
   );
 }
