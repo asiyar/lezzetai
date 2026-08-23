@@ -46,6 +46,19 @@ const fallbackScan: { ingredients: { name: string; category: string; confidence:
   safetyNote: "Tanıma tahminidir; alerjen veya içerik kararlarından önce malzemeleri kontrol et.",
 };
 
+const fallbackEquipmentScan = { tools: [] as string[], uncertain: [] as string[], note: "Tanıma tahminidir; eklenen ekipmanları kullanmadan önce kontrol et." };
+
+function normalizeEquipmentScan(content: string | null | undefined) {
+  if (!content) return fallbackEquipmentScan;
+  try {
+    const parsed = JSON.parse(content) as { tools?: unknown; uncertain?: unknown; note?: unknown };
+    const allowedTools = ["Tava", "Fırın", "Air Fryer", "Tencere"];
+    const tools = Array.isArray(parsed.tools) ? parsed.tools.filter((item): item is string => typeof item === "string" && allowedTools.includes(item)).slice(0, 4) : [];
+    const uncertain = Array.isArray(parsed.uncertain) ? parsed.uncertain.filter((item): item is string => typeof item === "string" && item.trim().length > 0).map((item) => item.trim().slice(0, 50)).slice(0, 4) : [];
+    return { tools, uncertain, note: typeof parsed.note === "string" && parsed.note.trim() ? parsed.note.trim().slice(0, 180) : fallbackEquipmentScan.note };
+  } catch { return fallbackEquipmentScan; }
+}
+
 function normalizeScan(content: string | null | undefined) {
   if (!content) return fallbackScan;
   try {
@@ -119,6 +132,21 @@ export const appRouter = router({
         response_format: { type: "json_object" },
       });
       return normalizeScan(response.choices[0]?.message?.content as string | null | undefined);
+    }),
+    scanEquipment: publicProcedure.input(scanInput).mutation(async ({ input }) => {
+      const imageBytes = Buffer.from(input.imageBase64, "base64");
+      if (imageBytes.length < 100 || imageBytes.length > 5_000_000) throw new Error("Fotoğraf boyutu desteklenen sınırın dışında.");
+      const extension = input.mimeType === "image/png" ? "png" : input.mimeType === "image/webp" ? "webp" : "jpg";
+      const upload = await storagePut(`equipment-scans/scan.${extension}`, imageBytes, input.mimeType);
+      const response = await invokeLLM({
+        model: "gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: "Sen LezzetAI'nin görsel mutfak ekipmanı tanıma yardımcısın. Fotoğrafta açıkça görülen araçlardan yalnızca şu izinli değerleri kullan: Tava, Fırın, Air Fryer, Tencere. Fırın ancak gerçek fırın görünüyorsa, air fryer ancak air fryer görünüyorsa eklenmeli. Belirsiz araçları uncertain dizisine yaz; kesinmiş gibi söyleme. Yalnızca geçerli JSON döndür: {tools:string[],uncertain:string[],note:string}." },
+          { role: "user", content: [{ type: "text", text: "Bu mutfak fotoğrafındaki pişirme ekipmanlarını tanı." }, { type: "image_url", image_url: { url: upload.url, detail: "low" } }] },
+        ],
+        response_format: { type: "json_object" },
+      });
+      return normalizeEquipmentScan(response.choices[0]?.message?.content as string | null | undefined);
     }),
   }),
   familyList: router({

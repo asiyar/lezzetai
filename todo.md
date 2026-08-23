@@ -41,3 +41,8 @@
 - [x] Seçilen ekipmanları cihazda saklamak ve düzenlemek
 - [x] Tarif önerileri ile haftalık menüde ekipman uygunluğunu dikkate almak
 - [x] Ekipman seçimi ve ekipman uyumlu önerileri test etmek
+- [x] Kamera veya galeriden ekipman fotoğrafı seçme akışını eklemek
+- [x] Fotoğraftaki mutfak ekipmanlarını tanıyıp tercihlere eklemek
+- [x] Tariflerde en hızlı uygun ekipmanı öne çıkarmak
+- [x] Eksik ekipman için alternatif pişirme yöntemi göstermek
+- [x] Ekipman tanıma ve yöntem önerisi akışlarını test etmek

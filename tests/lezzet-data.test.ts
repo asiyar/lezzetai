@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { buildShoppingShareMessage, uniqueShoppingItems } from "../lib/meal-planning";
 import { buildPersonalWeekPlan, findPersonalMenuAlternative } from "../lib/personal-menu";
+import { getEquipmentAdvice } from "../lib/equipment-advice";
 
 describe("LezzetAI haftalık planlama", () => {
   it("planlanan öğünlerde yinelenen malzemeleri tek alışveriş kalemine indirger", () => {
@@ -41,5 +42,11 @@ describe("LezzetAI haftalık planlama", () => {
     const menuRecipes = [{ id: "tava", title: "Tavada sebze", subtitle: "Hızlı", ingredients: ["Kabak"], tags: [], protein: 12, calories: 360, minutes: 15, tools: ["Tava"] }, { id: "firin", title: "Fırın sebze", subtitle: "Yavaş", ingredients: ["Kabak"], tags: [], protein: 12, calories: 360, minutes: 30, tools: ["Fırın"] }];
     const plan = buildPersonalWeekPlan(menuRecipes, { pantry: [], favoriteIngredients: [], goal: "Dengeli beslenme", allergies: [], kitchenTools: ["Fırın"] });
     expect(plan.every((entry) => entry.recipeId === "firin")).toBe(true);
+  });
+
+  it("en hızlı mevcut ekipmanı önerir, hiçbiri yoksa alternatif yöntemi döndürür", () => {
+    const recipe = { toolTimes: { "Fırın": 26, "Air Fryer": 18 }, fallbackMethod: "Kapaklı tavada kısık ateşte pişir." };
+    expect(getEquipmentAdvice(recipe, ["Fırın", "Air Fryer"])).toMatchObject({ available: true, tool: "Air Fryer", minutes: 18 });
+    expect(getEquipmentAdvice(recipe, ["Tencere"])).toMatchObject({ available: false, tool: "Air Fryer", text: "Kapaklı tavada kısık ateşte pişir." });
   });
 });

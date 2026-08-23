@@ -1,6 +1,7 @@
 import type { ImageSourcePropType } from "react-native";
 import { uniqueShoppingItems } from "@/lib/meal-planning";
 import { buildPersonalWeekPlan, findPersonalMenuAlternative } from "@/lib/personal-menu";
+import { getEquipmentAdvice as getAdvice } from "@/lib/equipment-advice";
 
 export type Recipe = {
   id: string;
@@ -12,6 +13,8 @@ export type Recipe = {
   protein: number;
   difficulty: "Kolay" | "Orta";
   tools: string[];
+  toolTimes: Record<string, number>;
+  fallbackMethod: string;
   image: ImageSourcePropType;
   accent: string;
   ingredients: string[];
@@ -30,6 +33,8 @@ export const recipes: Recipe[] = [
     protein: 20,
     difficulty: "Kolay",
     tools: ["Tava", "Tencere"],
+    toolTimes: { "Tava": 18, "Tencere": 22 },
+    fallbackMethod: "Tava yoksa nohudu küçük bir tencerede 5 dakika ısıtıp kâsede servis edebilirsin.",
     image: require("../assets/images/food/enerji-kasesi.jpg"),
     accent: "#DDE8DA",
     ingredients: ["1 su bardağı haşlanmış nohut", "Yarım avokado", "1 küçük salatalık", "2 avuç roka", "3 yemek kaşığı tahin", "Yarım limon", "1 çay kaşığı kimyon"],
@@ -46,6 +51,8 @@ export const recipes: Recipe[] = [
     protein: 24,
     difficulty: "Kolay",
     tools: ["Fırın", "Air Fryer"],
+    toolTimes: { "Air Fryer": 18, "Fırın": 24 },
+    fallbackMethod: "Fırın veya air fryer yoksa domates ve yumurtayı kapaklı tavada kısık ateşte pişir.",
     image: require("../assets/images/food/firin-domates.jpg"),
     accent: "#FCE6D2",
     ingredients: ["2 yumurta", "10 çeri domates", "1 diş sarımsak", "2 yemek kaşığı yoğurt", "1 dilim tam tahıllı ekmek", "Taze fesleğen"],
@@ -62,6 +69,8 @@ export const recipes: Recipe[] = [
     protein: 16,
     difficulty: "Orta",
     tools: ["Fırın", "Air Fryer"],
+    toolTimes: { "Air Fryer": 20, "Fırın": 28 },
+    fallbackMethod: "Fırın veya air fryer yoksa sebzeleri ince dilimleyip tavada parti parti yumuşatabilirsin.",
     image: require("../assets/images/food/mezze.jpg"),
     accent: "#F9E2DB",
     ingredients: ["2 patlıcan", "1 pancar", "1 kâse süzme yoğurt", "Yarım limon", "Maydanoz", "Zeytinyağı", "Taze ekmek"],
@@ -78,6 +87,8 @@ export const recipes: Recipe[] = [
     protein: 38,
     difficulty: "Orta",
     tools: ["Fırın", "Air Fryer", "Tava"],
+    toolTimes: { "Air Fryer": 18, "Tava": 18, "Fırın": 30 },
+    fallbackMethod: "Fırın veya air fryer yoksa somonu yapışmaz tavada orta ateşte her yüzünü 4-5 dakika pişir.",
     image: require("../assets/images/food/akdeniz-tabagi.jpg"),
     accent: "#E0ECE8",
     ingredients: ["150 g somon", "1 küçük kabak", "1 kırmızı biber", "10 çeri domates", "Yarım limon", "Taze dereotu", "1 avuç roka"],
@@ -103,6 +114,10 @@ export function buildPersonalWeeklyPlan(input: { pantry: string[]; favoriteIngre
 
 export function getPersonalRecipeAlternative(input: { pantry: string[]; favoriteIngredients: string[]; goal: string; allergies: string[]; kitchenTools: string[] }, currentRecipeId: string, occupiedRecipeIds: string[]) {
   return findPersonalMenuAlternative(recipes, input, currentRecipeId, occupiedRecipeIds);
+}
+
+export function getEquipmentAdvice(recipe: Recipe, kitchenTools: string[]) {
+  return getAdvice(recipe, kitchenTools);
 }
 
 export function buildGroceryList(recipeIds: string[]) {
