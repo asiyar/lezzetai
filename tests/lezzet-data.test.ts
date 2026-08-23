@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { buildShoppingShareMessage, uniqueShoppingItems } from "../lib/meal-planning";
 import { buildPersonalWeekPlan, findPersonalMenuAlternative } from "../lib/personal-menu";
 import { getEquipmentAdvice } from "../lib/equipment-advice";
+import { getRecipeEstimate, scaleIngredientList } from "../lib/culinary-utils";
 
 describe("LezzetAI haftalık planlama", () => {
   it("planlanan öğünlerde yinelenen malzemeleri tek alışveriş kalemine indirger", () => {
@@ -48,5 +49,10 @@ describe("LezzetAI haftalık planlama", () => {
     const recipe = { toolTimes: { "Fırın": 26, "Air Fryer": 18 }, fallbackMethod: "Kapaklı tavada kısık ateşte pişir." };
     expect(getEquipmentAdvice(recipe, ["Fırın", "Air Fryer"])).toMatchObject({ available: true, tool: "Air Fryer", minutes: 18 });
     expect(getEquipmentAdvice(recipe, ["Tencere"])).toMatchObject({ available: false, tool: "Air Fryer", text: "Kapaklı tavada kısık ateşte pişir." });
+  });
+
+  it("porsiyonu ölçülü malzemelerde ölçekler ve tarif maliyetini kişi sayısına göre günceller", () => {
+    expect(scaleIngredientList(["2 yumurta", "Yarım limon"], 4)).toEqual(["4 yumurta", "Yarım limon"]);
+    expect(getRecipeEstimate(155, 4)).toBe(310);
   });
 });

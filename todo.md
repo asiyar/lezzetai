@@ -46,3 +46,15 @@
 - [x] Tariflerde en hızlı uygun ekipmanı öne çıkarmak
 - [x] Eksik ekipman için alternatif pişirme yöntemi göstermek
 - [x] Ekipman tanıma ve yöntem önerisi akışlarını test etmek
+- [x] Tarif beğeni ve zorluk geri bildirimi ile öğrenen öneri sinyallerini eklemek
+- [x] Makro hedefe ve porsiyon sayısına göre tarif miktarlarını ölçeklemek
+- [x] Ayrı alerjen ve hedefleri olan aile profillerini eklemek
+- [x] Haftalık bütçe limiti ve tarif bazlı tahmini maliyet planlamasını eklemek
+- [x] Market kategorilerine göre maliyet özeti ve alışveriş optimizasyonunu eklemek
+- [x] Son kullanma önceliğiyle sıfır atık menü önerilerini güçlendirmek
+- [x] Büyük adımlı canlı pişirme modu ile adım zamanlayıcılarını eklemek
+- [x] Canlı pişirme adımlarını cihazın sesli rehber özelliğiyle okutmak
+- [x] Pişirilen tarifler için fotoğraf ve not içeren mutfak günlüğü eklemek
+- [x] Günlük mutfak alışkanlıkları için kişiselleştirilmiş koç kartları eklemek
+- [x] Tematik şef koleksiyonları ve tarif serilerini eklemek
+- [x] Kapsamlı ürün genişletmesinin tüm yeni akışlarını test etmek

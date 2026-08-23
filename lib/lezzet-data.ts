@@ -11,6 +11,9 @@ export type Recipe = {
   minutes: number;
   calories: number;
   protein: number;
+  carbs: number;
+  fat: number;
+  estimatedCost: number;
   difficulty: "Kolay" | "Orta";
   tools: string[];
   toolTimes: Record<string, number>;
@@ -31,6 +34,9 @@ export const recipes: Recipe[] = [
     minutes: 18,
     calories: 480,
     protein: 20,
+    carbs: 42,
+    fat: 22,
+    estimatedCost: 155,
     difficulty: "Kolay",
     tools: ["Tava", "Tencere"],
     toolTimes: { "Tava": 18, "Tencere": 22 },
@@ -49,6 +55,9 @@ export const recipes: Recipe[] = [
     minutes: 24,
     calories: 365,
     protein: 24,
+    carbs: 31,
+    fat: 18,
+    estimatedCost: 130,
     difficulty: "Kolay",
     tools: ["Fırın", "Air Fryer"],
     toolTimes: { "Air Fryer": 18, "Fırın": 24 },
@@ -67,6 +76,9 @@ export const recipes: Recipe[] = [
     minutes: 28,
     calories: 420,
     protein: 16,
+    carbs: 48,
+    fat: 20,
+    estimatedCost: 210,
     difficulty: "Orta",
     tools: ["Fırın", "Air Fryer"],
     toolTimes: { "Air Fryer": 20, "Fırın": 28 },
@@ -85,6 +97,9 @@ export const recipes: Recipe[] = [
     minutes: 30,
     calories: 560,
     protein: 38,
+    carbs: 28,
+    fat: 29,
+    estimatedCost: 310,
     difficulty: "Orta",
     tools: ["Fırın", "Air Fryer", "Tava"],
     toolTimes: { "Air Fryer": 18, "Tava": 18, "Fırın": 30 },

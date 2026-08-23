@@ -9,7 +9,7 @@ import { recipes } from "@/lib/lezzet-data";
 import { useLezzet } from "@/lib/lezzet-context";
 
 export default function TodayScreen() {
-  const { favorites, pantry, profile, toggleFavorite } = useLezzet();
+  const { favorites, pantry, profile, journalEntries, recipeFeedback, toggleFavorite } = useLezzet();
   const heroRecipe = recipes[0];
 
   return (
@@ -42,13 +42,15 @@ export default function TodayScreen() {
           </View>
         </Pressable>
 
-        <View style={styles.metrics}>
-          <View style={styles.metricCopy}>
-            <Text style={styles.metricTitle}>Günün dengesi</Text>
-            <Text style={styles.metricSubtitle}>{profile.calories} kcal hedefinden 1.120 kaldı</Text>
+          <View style={styles.metrics}>
+            <View style={styles.metricCopy}>
+              <Text style={styles.metricTitle}>Günün dengesi</Text>
+              <Text style={styles.metricSubtitle}>{profile.calories} kcal hedefinden 1.120 kaldı</Text>
+            </View>
+            <View style={styles.ringOuter}><View style={styles.ringInner}><Text style={styles.ringText}>39%</Text></View></View>
           </View>
-          <View style={styles.ringOuter}><View style={styles.ringInner}><Text style={styles.ringText}>39%</Text></View></View>
-        </View>
+
+        <View style={styles.coachCard}><View style={styles.coachIcon}><IconSymbol name="sparkles" size={21} color="#FFFFFF" /></View><View style={{ flex: 1 }}><Text style={styles.coachTitle}>Bugünün mutfak koçu</Text><Text style={styles.coachText}>{journalEntries.length ? `${journalEntries.length} deneyimini değerlendirdik. Beğendiklerine yakın bir öğünü akşama planla.` : Object.keys(recipeFeedback).length ? "Geri bildirimlerinle önerileri kişiselleştiriyoruz. Bugün yeni bir tarife şans ver." : "İlk tarifini pişirdiğinde süre ve zorluk tercihlerini öğrenmeye başlarız."}</Text></View><Pressable onPress={() => router.push("/journal" as never)} style={styles.coachArrow}><IconSymbol name="chevron.right" size={19} color="#1E4D3A" /></Pressable></View>
 
         <View style={styles.quickRow}>
           <Pressable onPress={() => router.push("/(tabs)/chef" as never)} style={({ pressed }) => [styles.quickCard, styles.quickPrimary, pressed && styles.pressed]}>
@@ -110,6 +112,7 @@ const styles = StyleSheet.create({
   ringOuter: { width: 64, height: 64, borderRadius: 32, borderWidth: 6, borderColor: "#F4A261", alignItems: "center", justifyContent: "center" },
   ringInner: { width: 45, height: 45, borderRadius: 23, backgroundColor: "#2E634C", alignItems: "center", justifyContent: "center" },
   ringText: { color: "#FFFFFF", fontWeight: "900", fontSize: 13 },
+  coachCard: { flexDirection: "row", alignItems: "center", gap: 10, padding: 14, borderRadius: 20, backgroundColor: "#FCE6D2", marginTop: -8 }, coachIcon: { width: 39, height: 39, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: "#B7652E" }, coachTitle: { color: "#754626", fontSize: 13, fontWeight: "800" }, coachText: { color: "#9A6138", fontSize: 11, lineHeight: 16, marginTop: 2 }, coachArrow: { width: 28, height: 28, alignItems: "center", justifyContent: "center" },
   quickRow: { flexDirection: "row", gap: 12 },
   quickCard: { flex: 1, minHeight: 83, borderRadius: 20, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#EAE7E0", padding: 13, gap: 8 },
   quickPrimary: { backgroundColor: "#DDE8DA", borderColor: "#C9DCC4" },
