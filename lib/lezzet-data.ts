@@ -1,6 +1,6 @@
 import type { ImageSourcePropType } from "react-native";
 import { uniqueShoppingItems } from "@/lib/meal-planning";
-import { buildPersonalWeekPlan } from "@/lib/personal-menu";
+import { buildPersonalWeekPlan, findPersonalMenuAlternative } from "@/lib/personal-menu";
 
 export type Recipe = {
   id: string;
@@ -94,6 +94,10 @@ export const initialWeeklyPlan = [
 
 export function buildPersonalWeeklyPlan(input: { pantry: string[]; favoriteIngredients: string[]; goal: string; allergies: string[] }) {
   return buildPersonalWeekPlan(recipes, input);
+}
+
+export function getPersonalRecipeAlternative(input: { pantry: string[]; favoriteIngredients: string[]; goal: string; allergies: string[] }, currentRecipeId: string, occupiedRecipeIds: string[]) {
+  return findPersonalMenuAlternative(recipes, input, currentRecipeId, occupiedRecipeIds);
 }
 
 export function buildGroceryList(recipeIds: string[]) {

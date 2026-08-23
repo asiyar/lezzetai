@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildShoppingShareMessage, uniqueShoppingItems } from "../lib/meal-planning";
-import { buildPersonalWeekPlan } from "../lib/personal-menu";
+import { buildPersonalWeekPlan, findPersonalMenuAlternative } from "../lib/personal-menu";
 
 describe("LezzetAI haftalık planlama", () => {
   it("planlanan öğünlerde yinelenen malzemeleri tek alışveriş kalemine indirger", () => {
@@ -29,5 +29,11 @@ describe("LezzetAI haftalık planlama", () => {
     const plan = buildPersonalWeekPlan(menuRecipes, { pantry: ["Nohut", "Roka"], favoriteIngredients: ["Roka"], goal: "Protein odağı", allergies: ["somon"] });
     expect(plan).toHaveLength(7);
     expect(plan.every((entry) => entry.recipeId === "nohut")).toBe(true);
+  });
+
+  it("menü yenileme eyleminde mevcut tariften farklı ve alerjensiz bir alternatif seçer", () => {
+    const menuRecipes = [{ id: "nohut", title: "Nohut kasesi", subtitle: "Rokalı", ingredients: ["Nohut", "Roka"], tags: ["Vegan"], protein: 21, calories: 450, minutes: 20 }, { id: "mercimek", title: "Mercimek tabağı", subtitle: "Limonlu", ingredients: ["Mercimek", "Limon"], tags: ["Protein"], protein: 23, calories: 430, minutes: 25 }];
+    const alternative = findPersonalMenuAlternative(menuRecipes, { pantry: ["Nohut"], favoriteIngredients: [], goal: "Dengeli beslenme", allergies: [] }, "nohut", ["nohut"]);
+    expect(alternative).toBe("mercimek");
   });
 });

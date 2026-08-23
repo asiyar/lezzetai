@@ -34,3 +34,6 @@
 - [x] Aile üyelerinin değişikliklerini anlık yenileyen senkronizasyonu eklemek
 - [x] Aile listesini 3 saniyelik yakın gerçek zamanlı yenileme ile eşitlemek
 - [x] Otomatik menü, bildirim ve canlı liste akışlarını test etmek
+- [x] Haftalık menüde her öğün için tercih uyumlu alternatif tarif seçmek
+- [x] Tarif kartlarına tek dokunuşlu yenileme eylemi eklemek
+- [x] Alternatif tarif yenileme akışını test etmek

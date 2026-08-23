@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type PropsWithChildren } from "react";
 
-import { buildGroceryList, buildPersonalWeeklyPlan, initialPantry, initialWeeklyPlan } from "@/lib/lezzet-data";
+import { buildGroceryList, buildPersonalWeeklyPlan, getPersonalRecipeAlternative, initialPantry, initialWeeklyPlan } from "@/lib/lezzet-data";
 
 type GroceryItem = { name: string; checked: boolean; updatedBy?: string; updatedAt?: string };
 type WeeklyMeal = { day: string; meal: string; recipeId: string };
@@ -35,6 +35,7 @@ type LezzetContextValue = {
   addRecipeToPlan: (id: string) => void;
   createGroceryFromPlan: () => void;
   createPersonalWeeklyPlan: () => void;
+  replaceWeeklyMeal: (day: string, currentRecipeId: string) => void;
   updateProfile: (patch: Partial<Profile>) => void;
   completeOnboarding: (profile: Profile) => void;
 };
@@ -109,10 +110,15 @@ export function LezzetProvider({ children }: PropsWithChildren) {
 
   const createGroceryFromPlan = useCallback(() => setGrocery(buildGroceryList(weeklyPlan.map((item) => item.recipeId))), [weeklyPlan]);
   const createPersonalWeeklyPlan = useCallback(() => setWeeklyPlan(buildPersonalWeeklyPlan({ pantry, favoriteIngredients: pantry.filter((item) => pantryMeta[item]?.favorite), goal: profile.goal, allergies: profile.allergies })), [pantry, pantryMeta, profile.allergies, profile.goal]);
+  const replaceWeeklyMeal = useCallback((day: string, currentRecipeId: string) => setWeeklyPlan((current) => {
+    const input = { pantry, favoriteIngredients: pantry.filter((item) => pantryMeta[item]?.favorite), goal: profile.goal, allergies: profile.allergies };
+    const replacement = getPersonalRecipeAlternative(input, currentRecipeId, current.map((item) => item.recipeId));
+    return current.map((item) => item.day === day && item.recipeId === currentRecipeId ? { ...item, recipeId: replacement } : item);
+  }), [pantry, pantryMeta, profile.allergies, profile.goal]);
   const updateProfile = useCallback((patch: Partial<Profile>) => setProfile((current) => ({ ...current, ...patch })), []);
   const completeOnboarding = useCallback((nextProfile: Profile) => { setProfile(nextProfile); setOnboardingComplete(true); }, []);
 
-  const value = useMemo(() => ({ favorites, pantry, pantryMeta, scanHistory, familyMembers, sharedListInviteCode, grocery, weeklyPlan, profile, onboardingComplete, hydrated, toggleFavorite, addPantryItem, removePantryItem, toggleFavoriteIngredient, setExpiryPriority, recordScan, removeScan, addFamilyMember, setSharedListInviteCode, toggleGrocery, addRecipeToPlan, createGroceryFromPlan, createPersonalWeeklyPlan, updateProfile, completeOnboarding }), [addFamilyMember, addPantryItem, addRecipeToPlan, completeOnboarding, createGroceryFromPlan, createPersonalWeeklyPlan, familyMembers, favorites, grocery, hydrated, onboardingComplete, pantry, pantryMeta, profile, recordScan, removePantryItem, removeScan, setExpiryPriority, scanHistory, sharedListInviteCode, toggleFavorite, toggleFavoriteIngredient, toggleGrocery, updateProfile, weeklyPlan]);
+  const value = useMemo(() => ({ favorites, pantry, pantryMeta, scanHistory, familyMembers, sharedListInviteCode, grocery, weeklyPlan, profile, onboardingComplete, hydrated, toggleFavorite, addPantryItem, removePantryItem, toggleFavoriteIngredient, setExpiryPriority, recordScan, removeScan, addFamilyMember, setSharedListInviteCode, toggleGrocery, addRecipeToPlan, createGroceryFromPlan, createPersonalWeeklyPlan, replaceWeeklyMeal, updateProfile, completeOnboarding }), [addFamilyMember, addPantryItem, addRecipeToPlan, completeOnboarding, createGroceryFromPlan, createPersonalWeeklyPlan, familyMembers, favorites, grocery, hydrated, onboardingComplete, pantry, pantryMeta, profile, recordScan, removePantryItem, removeScan, replaceWeeklyMeal, setExpiryPriority, scanHistory, sharedListInviteCode, toggleFavorite, toggleFavoriteIngredient, toggleGrocery, updateProfile, weeklyPlan]);
 
   return <LezzetContext.Provider value={value}>{children}</LezzetContext.Provider>;
 }
