@@ -21,3 +21,9 @@
 - [x] Alışveriş listesini cihaz paylaşım menüsünde metin olarak dışa aktarmak
 - [x] Paylaşım öncesi aile listesi başlığı ve özetini düzenleme deneyimini eklemek
 - [x] Yeni onboarding, kamera ve paylaşım akışlarını test etmek
+- [x] Malzeme tarama geçmişini cihazda saklayıp yeniden açılabilir hâle getirmek
+- [x] Sık kullanılan malzemeleri favori olarak işaretleme deneyimini eklemek
+- [x] Aile üyelerini görünür kılan ortak alışveriş listesi çalışma alanını eklemek
+- [x] Ortak listedeki güncellemeleri kişiye bağlayarak gösterme deneyimini eklemek
+- [x] Kiler ürünlerine son kullanma önceliği atamak ve akıllı uyarılar sunmak
+- [x] Yeni kişisel ve aile akışlarını test etmek
