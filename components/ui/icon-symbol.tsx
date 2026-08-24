@@ -18,6 +18,7 @@ const MAPPING = {
   "paperplane.fill": "send",
   "chevron.left.forwardslash.chevron.right": "code",
   "chevron.right": "chevron-right",
+  "lock.fill": "lock",
   "sparkles": "auto-awesome",
   "safari": "explore",
   "calendar": "calendar-month",

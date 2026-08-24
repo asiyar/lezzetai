@@ -74,3 +74,12 @@
 - [x] Ana ekran, AI Şef ve canlı pişirme modunda bilgi mimarisini ve hiyerarşiyi yeniden kurmak
 - [x] Uygun ücretsiz Apple yapay zekâ yaklaşımını mevcut AI Şef akışına eklemek veya uygulanabilirlik notunu sunmak
 - [x] Profesyonel tasarım dönüşümü ve yapay zekâ araştırmasını test etmek
+- [x] iOS ve Android uygulama yapılandırması, simge ve izin beyanlarını yayın için denetlemek
+- [x] Yerel modüllerin Expo Go dışı derleme gereksinimlerini ve platform geri dönüşlerini doğrulamak
+- [ ] Rota kapsamını, kritik eylemleri ve hata durumlarını uçtan uca kontrol etmek
+- [ ] Uygulama kimliği, sürüm, paket adı ve yayın gereksinimlerindeki eksikleri gidermek
+- [x] Son TypeScript, test ve üretim öncesi yapılandırma kontrollerini tamamlamak
+- [x] Mağaza beyanlarıyla tutarlı, uygulama içinden ve web rotasından erişilebilir gizlilik metni eklemek
+- [ ] Gizlilik rotasını yayımlanmış, herkese açık URL ile destek ve veri silme iletişim bilgisine bağlamak
+- [ ] Apple App Store Connect ve Google Play Console listelemeleri, yaş/içerik, gizlilik ve sağlık beyanlarını tamamlamak
+- [ ] İmzalı iOS ve Android üretim paketlerini gerçek cihazlarda test ederek mağaza incelemesine göndermek
