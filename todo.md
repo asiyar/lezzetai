@@ -58,3 +58,13 @@
 - [x] Günlük mutfak alışkanlıkları için kişiselleştirilmiş koç kartları eklemek
 - [x] Tematik şef koleksiyonları ve tarif serilerini eklemek
 - [x] Kapsamlı ürün genişletmesinin tüm yeni akışlarını test etmek
+- [x] Giyilebilir cihaz bağlantısı ve izin durumunu yöneten arayüzü eklemek
+- [x] Aktivite, aktif kalori ve adım verisini güvenli yerel durumla eşlemek
+- [x] Aktivite verisine göre günlük kalori ile protein, karbonhidrat ve yağ hedeflerini güncellemek
+- [x] Günlük hedef güncellemesini ana ekran ve profil alanında görünür kılmak
+- [x] Giyilebilir senkronizasyonu ve hedef hesaplama kurallarını test etmek
+- [x] appllama.io’daki uygun görsel referanslardan tasarım ilkelerini çıkarmak
+- [x] LezzetAI için özgün tipografi, yüzey, boşluk ve renk vurgusu sistemini yenilemek
+- [x] Ana ekran, plan, tarif ayrıntısı ve AI Şef ekranlarını yeni sistemle geliştirmek
+- [x] Dokunma geri bildirimi, kart geçişi ve durum animasyonlarını iyileştirmek
+- [x] Görsel sistem güncellemesini test etmek ve tutarlılığını doğrulamak

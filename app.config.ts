@@ -94,6 +94,14 @@ const config: ExpoConfig = {
       }
     ],
     [
+      "@kingstinct/react-native-healthkit",
+      {
+        "NSHealthShareUsageDescription": "Günlük aktivite, adım ve aktif enerji verilerini LezzetAI hedeflerini uyarlamak için kullanır.",
+        "NSHealthUpdateUsageDescription": "LezzetAI Health uygulamasındaki verileri değiştirmez; yalnızca izin verdiğiniz etkinlik özetini okur."
+      }
+    ],
+    "react-native-health-connect",
+    [
       "expo-notifications",
       {
         "color": "#1E4D3A",
@@ -130,7 +138,9 @@ const config: ExpoConfig = {
       {
         android: {
           buildArchs: ["armeabi-v7a", "arm64-v8a"],
-          minSdkVersion: 24,
+          minSdkVersion: 26,
+          compileSdkVersion: 36,
+          targetSdkVersion: 36,
         },
       },
     ],

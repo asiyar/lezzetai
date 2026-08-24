@@ -4,6 +4,7 @@ import { buildShoppingShareMessage, uniqueShoppingItems } from "../lib/meal-plan
 import { buildPersonalWeekPlan, findPersonalMenuAlternative } from "../lib/personal-menu";
 import { getEquipmentAdvice } from "../lib/equipment-advice";
 import { getRecipeEstimate, scaleIngredientList } from "../lib/culinary-utils";
+import { getAdaptiveTargets } from "../lib/wearable-utils";
 
 describe("LezzetAI haftalık planlama", () => {
   it("planlanan öğünlerde yinelenen malzemeleri tek alışveriş kalemine indirger", () => {
@@ -54,5 +55,9 @@ describe("LezzetAI haftalık planlama", () => {
   it("porsiyonu ölçülü malzemelerde ölçekler ve tarif maliyetini kişi sayısına göre günceller", () => {
     expect(scaleIngredientList(["2 yumurta", "Yarım limon"], 4)).toEqual(["4 yumurta", "Yarım limon"]);
     expect(getRecipeEstimate(155, 4)).toBe(310);
+  });
+
+  it("aktif enerji verisini günlük kalori ve makro hedefine ölçülü biçimde yansıtır", () => {
+    expect(getAdaptiveTargets(1850, 400)).toEqual({ calories: 2050, adjustment: 200, protein: 128, carbs: 256, fat: 57 });
   });
 });

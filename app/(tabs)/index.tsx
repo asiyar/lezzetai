@@ -7,10 +7,12 @@ import { SectionTitle } from "@/components/section-title";
 import { ScreenContainer } from "@/components/screen-container";
 import { recipes } from "@/lib/lezzet-data";
 import { useLezzet } from "@/lib/lezzet-context";
+import { getAdaptiveTargets } from "@/lib/wearable-utils";
 
 export default function TodayScreen() {
-  const { favorites, pantry, profile, journalEntries, recipeFeedback, toggleFavorite } = useLezzet();
+  const { favorites, pantry, profile, wearableActivity, journalEntries, recipeFeedback, toggleFavorite } = useLezzet();
   const heroRecipe = recipes[0];
+  const adaptiveTargets = getAdaptiveTargets(profile.calories, wearableActivity?.activeCalories ?? 0);
 
   return (
     <ScreenContainer className="flex-1" containerClassName="bg-background">
@@ -45,7 +47,7 @@ export default function TodayScreen() {
           <View style={styles.metrics}>
             <View style={styles.metricCopy}>
               <Text style={styles.metricTitle}>Günün dengesi</Text>
-              <Text style={styles.metricSubtitle}>{profile.calories} kcal hedefinden 1.120 kaldı</Text>
+              <Text style={styles.metricSubtitle}>{adaptiveTargets.calories} kcal hedefi{wearableActivity ? ` · +${adaptiveTargets.adjustment} hareket uyarlaması` : ""}</Text>
             </View>
             <View style={styles.ringOuter}><View style={styles.ringInner}><Text style={styles.ringText}>39%</Text></View></View>
           </View>
@@ -89,30 +91,30 @@ export default function TodayScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 20, paddingBottom: 36, gap: 24 },
+  content: { padding: 20, paddingBottom: 38, gap: 22 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   eyebrow: { color: "#6B756F", fontSize: 11, fontWeight: "800", letterSpacing: 1.1 },
-  greeting: { color: "#1E2521", fontSize: 26, lineHeight: 32, fontWeight: "800", letterSpacing: -0.7, marginTop: 2 },
+  greeting: { color: "#1E2521", fontSize: 29, lineHeight: 35, fontWeight: "800", letterSpacing: -0.95, marginTop: 3 },
   avatar: { alignItems: "center", justifyContent: "center", width: 42, height: 42, borderRadius: 21, backgroundColor: "#1E4D3A", borderWidth: 3, borderColor: "#DDE8DA" },
   avatarText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
-  hero: { height: 248, borderRadius: 28, overflow: "hidden", position: "relative", justifyContent: "space-between", padding: 18 },
+  hero: { height: 258, borderRadius: 30, overflow: "hidden", position: "relative", justifyContent: "space-between", padding: 19, shadowColor: "#1E2521", shadowOpacity: 0.12, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 4 },
   heroImage: { ...StyleSheet.absoluteFillObject, width: undefined, height: undefined },
   heroShade: { ...StyleSheet.absoluteFillObject, backgroundColor: "#0C251A", opacity: 0.38 },
   heroTag: { alignSelf: "flex-start", flexDirection: "row", gap: 6, alignItems: "center", backgroundColor: "#FBF8F2", borderRadius: 14, paddingHorizontal: 10, paddingVertical: 7 },
   heroTagText: { color: "#1E4D3A", fontSize: 10, fontWeight: "900", letterSpacing: 0.65 },
   heroCopy: { gap: 7 },
-  heroTitle: { color: "#FFFFFF", fontSize: 26, fontWeight: "800", lineHeight: 32, maxWidth: "90%", letterSpacing: -0.6 },
+  heroTitle: { color: "#FFFFFF", fontSize: 27, fontWeight: "800", lineHeight: 33, maxWidth: "90%", letterSpacing: -0.8 },
   heroMeta: { flexDirection: "row", alignItems: "center", gap: 8 },
   heroMetaText: { color: "#FFFFFF", fontSize: 13, fontWeight: "700" },
   dot: { width: 4, height: 4, borderRadius: 4, backgroundColor: "#FFFFFF" },
-  metrics: { minHeight: 94, flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#1E4D3A", borderRadius: 24, paddingHorizontal: 18, paddingVertical: 15 },
+  metrics: { minHeight: 96, flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#1E4D3A", borderRadius: 26, paddingHorizontal: 18, paddingVertical: 15, shadowColor: "#1E4D3A", shadowOpacity: 0.12, shadowRadius: 14, shadowOffset: { width: 0, height: 7 }, elevation: 2 },
   metricCopy: { flex: 1, paddingRight: 12 },
   metricTitle: { color: "#FFFFFF", fontSize: 17, fontWeight: "800" },
   metricSubtitle: { color: "#DDE8DA", fontSize: 12, lineHeight: 17, marginTop: 3 },
   ringOuter: { width: 64, height: 64, borderRadius: 32, borderWidth: 6, borderColor: "#F4A261", alignItems: "center", justifyContent: "center" },
   ringInner: { width: 45, height: 45, borderRadius: 23, backgroundColor: "#2E634C", alignItems: "center", justifyContent: "center" },
   ringText: { color: "#FFFFFF", fontWeight: "900", fontSize: 13 },
-  coachCard: { flexDirection: "row", alignItems: "center", gap: 10, padding: 14, borderRadius: 20, backgroundColor: "#FCE6D2", marginTop: -8 }, coachIcon: { width: 39, height: 39, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: "#B7652E" }, coachTitle: { color: "#754626", fontSize: 13, fontWeight: "800" }, coachText: { color: "#9A6138", fontSize: 11, lineHeight: 16, marginTop: 2 }, coachArrow: { width: 28, height: 28, alignItems: "center", justifyContent: "center" },
+  coachCard: { flexDirection: "row", alignItems: "center", gap: 10, padding: 15, borderRadius: 22, backgroundColor: "#FCE6D2", marginTop: -7, borderWidth: 1, borderColor: "#F3D4BA" }, coachIcon: { width: 40, height: 40, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: "#B7652E" }, coachTitle: { color: "#754626", fontSize: 13, fontWeight: "800" }, coachText: { color: "#9A6138", fontSize: 11, lineHeight: 16, marginTop: 2 }, coachArrow: { width: 28, height: 28, alignItems: "center", justifyContent: "center" },
   quickRow: { flexDirection: "row", gap: 12 },
   quickCard: { flex: 1, minHeight: 83, borderRadius: 20, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#EAE7E0", padding: 13, gap: 8 },
   quickPrimary: { backgroundColor: "#DDE8DA", borderColor: "#C9DCC4" },
