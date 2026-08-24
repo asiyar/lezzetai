@@ -1,22 +1,25 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import * as Speech from "expo-speech";
 
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { LocalizedText as Text } from "@/components/localized-text";
 import { ScreenContainer } from "@/components/screen-container";
 import { getRecipe } from "@/lib/lezzet-data";
+import { useLezzet } from "@/lib/lezzet-context";
 
 export default function CookModeScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const recipe = getRecipe(params.id);
+  const { profile } = useLezzet();
   const [stepIndex, setStepIndex] = useState(0);
   const [seconds, setSeconds] = useState(0);
   const [running, setRunning] = useState(false);
   const step = recipe.steps[stepIndex];
   useEffect(() => { if (!running) return; const timer = setInterval(() => setSeconds((value) => value + 1), 1000); return () => clearInterval(timer); }, [running]);
   useEffect(() => () => { Speech.stop(); }, []);
-  const speakStep = async () => { await Speech.stop(); Speech.speak(`Adım ${stepIndex + 1}. ${step}`, { language: "tr-TR", rate: 0.92 }); };
+  const speakStep = async () => { await Speech.stop(); Speech.speak(`${stepIndex + 1}. ${step}`, { language: profile.locale, rate: 0.92 }); };
   const next = () => { if (stepIndex < recipe.steps.length - 1) setStepIndex((index) => index + 1); else { setRunning(false); Speech.stop(); } };
   const time = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
   const completion = ((stepIndex + 1) / recipe.steps.length) * 100;

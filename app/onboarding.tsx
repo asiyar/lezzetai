@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { LocalizedText as Text } from "@/components/localized-text";
 import { useState } from "react";
 import { router } from "expo-router";
 
@@ -20,7 +21,7 @@ export default function OnboardingScreen() {
   const [calorieTarget, setCalorieTarget] = useState(1850);
   const [people, setPeople] = useState(2);
   const toggleAllergy = (item: string) => setSelectedAllergies((current) => item === "Yok" ? (current.includes("Yok") ? [] : ["Yok"]) : (current.includes("Yok") ? [item] : current.includes(item) ? current.filter((value) => value !== item) : [...current, item]));
-  const finish = () => { completeOnboarding({ goal, allergies: selectedAllergies.filter((item) => item !== "Yok"), calories: calorieTarget, people, locale }); router.replace("/(tabs)" as never); };
+  const finish = () => { completeOnboarding({ goal, allergies: selectedAllergies.filter((item) => item !== "Yok"), calories: calorieTarget, people, locale, dietaryPreferences: [] }); router.replace("/(tabs)" as never); };
   const headings = ["Mutfağının dilini seç.", "Yemeklerin sana uyum sağlasın.", "Nelerden uzak duralım?", "Ritmini birlikte belirleyelim."];
   const subheadings = ["Bu seçim; tarifleri, haftalık planı, kiler odaklarını ve önerilen araçları bölgesine göre şekillendirir.", "Hedefini bilerek her gün daha isabetli öneriler hazırlayalım.", "Alerjenlerini hatırlayalım; AI Şef bunları tariflerinde dikkate alsın.", "Bu ayarları dilediğin zaman Profil’den değiştirebilirsin."];
   return <ScreenContainer edges={["top", "bottom", "left", "right"]} className="flex-1" containerClassName="bg-background"><View style={styles.content}>

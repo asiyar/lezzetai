@@ -1,4 +1,5 @@
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { LocalizedText as Text } from "@/components/localized-text";
 import { router } from "expo-router";
 import { useState } from "react";
 

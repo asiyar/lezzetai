@@ -87,3 +87,9 @@
 - [x] Seçilen dil-bölgeye göre tarif, malzeme, ekipman ve haftalık plan önerisini uyarlamak
 - [x] Uygulama içi dil seçimini kalıcılaştırmak ve temel arayüz metinlerini yerelleştirmek
 - [x] Bölgesel tarif ve planlama kurallarını birim testleriyle doğrulamak
+- [x] Beş bölge için iklim ve kültüre uyumlu mevsimsel tarif paketlerini tanımlamak
+- [x] Kullanıcının seçtiği vegan, vejetaryen ve glutensiz beslenme tercihlerini kalıcılaştırmak
+- [x] Tarif kataloğu ve otomatik haftalık planı seçilen diyet filtresine göre uyarlamak
+- [x] Kalan uygulama ekranlarını seçili dile göre yerelleştirmek
+- [x] Ülkeye özgü para birimi, fiyat biçimi ve market kategorilerini eklemek
+- [x] Mevsim, bölge, diyet ve yerel alışveriş kurallarını test etmek

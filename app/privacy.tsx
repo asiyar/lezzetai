@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import type { ReactNode } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { LocalizedText as Text } from "@/components/localized-text";
 
 import { ScreenContainer } from "@/components/screen-container";
 

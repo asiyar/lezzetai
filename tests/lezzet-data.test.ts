@@ -6,6 +6,7 @@ import { getEquipmentAdvice } from "../lib/equipment-advice";
 import { getRecipeEstimate, scaleIngredientList } from "../lib/culinary-utils";
 import { getAdaptiveTargets } from "../lib/wearable-utils";
 import { getCuisineProfile } from "../lib/cuisine-locale";
+import { formatLocalCurrency, getCurrentSeason, getMarketCategory, getSeasonalPackage, recipeMatchesDiet } from "../lib/seasonal-market";
 
 describe("LezzetAI haftalık planlama", () => {
   it("planlanan öğünlerde yinelenen malzemeleri tek alışveriş kalemine indirger", () => {
@@ -82,5 +83,25 @@ describe("LezzetAI haftalık planlama", () => {
     expect(plan).toHaveLength(7);
     expect(plan[0].day).toBe("Mo");
     expect(plan.every((entry) => entry.recipeId.startsWith("de-"))).toBe(true);
+  });
+
+  it("cihaz tarihini kuzey yarımküre mevsimine çevirir ve bölgeye özgü paketi döndürür", () => {
+    expect(getCurrentSeason(new Date("2026-07-12T12:00:00Z"))).toBe("summer");
+    expect(getCurrentSeason(new Date("2026-12-12T12:00:00Z"))).toBe("winter");
+    expect(getSeasonalPackage("es-ES", "summer").ingredients).toContain("Tomates");
+    expect(getSeasonalPackage("tr-TR", "winter").ingredients).toContain("Pırasa");
+  });
+
+  it("vegan, vejetaryen ve glutensiz filtrelerini birlikte uygular", () => {
+    expect(recipeMatchesDiet(["vegan", "gluten-free"], ["vegan", "vegetarian", "gluten-free"])).toBe(true);
+    expect(recipeMatchesDiet(["vegetarian"], ["vegan"])).toBe(false);
+    expect(recipeMatchesDiet(["vegan"], ["vegetarian"])).toBe(true);
+  });
+
+  it("market kategorisini ve maliyeti seçilen ülkenin dil ve para biçiminde üretir", () => {
+    expect(getMarketCategory("Tomates", "es-ES")).toBe("Fruta y verdura");
+    expect(getMarketCategory("Cheddar", "en-GB")).toBe("Dairy");
+    expect(formatLocalCurrency(12, "en-GB")).toContain("£");
+    expect(formatLocalCurrency(12, "de-DE")).toContain("€");
   });
 });

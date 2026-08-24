@@ -1,4 +1,5 @@
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { LocalizedText as Text } from "@/components/localized-text";
 import { router } from "expo-router";
 import { useState } from "react";
 import * as ImagePicker from "expo-image-picker";

@@ -1,7 +1,8 @@
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { LocalizedText as Text } from "@/components/localized-text";
 import { MotionReveal } from "@/components/motion-reveal";
 import { RecipeCard } from "@/components/recipe-card";
 import { SectionTitle } from "@/components/section-title";

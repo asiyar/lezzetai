@@ -1,8 +1,9 @@
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import { useEffect, useState } from "react";
 import { useLocalSearchParams } from "expo-router";
 
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { LocalizedText as Text } from "@/components/localized-text";
 import { MotionReveal } from "@/components/motion-reveal";
 import { ScreenContainer } from "@/components/screen-container";
 import { useLezzet } from "@/lib/lezzet-context";

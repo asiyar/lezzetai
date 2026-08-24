@@ -38,6 +38,7 @@ function AppNavigator() {
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="cuisine-region" />
+      <Stack.Screen name="diet-preferences" />
       <Stack.Screen name="privacy" />
       <Stack.Screen name="oauth/callback" />
     </Stack>

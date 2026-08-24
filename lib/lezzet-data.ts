@@ -4,9 +4,10 @@ import { getCuisineProfile, type CuisineLocale } from "@/lib/cuisine-locale";
 import { getEquipmentAdvice as getAdvice } from "@/lib/equipment-advice";
 import { uniqueShoppingItems } from "@/lib/meal-planning";
 import { buildPersonalWeekPlan, findPersonalMenuAlternative } from "@/lib/personal-menu";
+import { getCurrentSeason, recipeMatchesDiet, type DietaryPreference, type DietaryTag, type Season } from "@/lib/seasonal-market";
 
 export type Recipe = {
-  id: string; cuisine: CuisineLocale; title: string; subtitle: string; category: string; minutes: number; calories: number; protein: number; carbs: number; fat: number; estimatedCost: number; difficulty: "Kolay" | "Orta"; tools: string[]; toolTimes: Record<string, number>; fallbackMethod: string; image: ImageSourcePropType; accent: string; ingredients: string[]; steps: string[]; tags: string[];
+  id: string; cuisine: CuisineLocale; title: string; subtitle: string; category: string; minutes: number; calories: number; protein: number; carbs: number; fat: number; estimatedCost: number; difficulty: "Kolay" | "Orta"; tools: string[]; toolTimes: Record<string, number>; fallbackMethod: string; image: ImageSourcePropType; accent: string; ingredients: string[]; steps: string[]; tags: string[]; dietaryTags: DietaryTag[]; seasons: Season[];
 };
 
 const images = [
@@ -16,8 +17,17 @@ const images = [
   require("../assets/images/food/akdeniz-tabagi.jpg"),
 ];
 
+const recipeMeta: Record<string, { dietaryTags: DietaryTag[]; seasons: Season[] }> = {
+  "tr-mercimek": { dietaryTags: ["vegan", "gluten-free"], seasons: ["winter", "autumn"] }, "tr-fasulye": { dietaryTags: ["vegan", "gluten-free"], seasons: ["summer"] }, "tr-bulgur": { dietaryTags: ["vegetarian"], seasons: ["summer", "autumn"] }, "tr-kofte": { dietaryTags: ["gluten-free"], seasons: ["summer", "autumn"] },
+  "en-shepherds-pie": { dietaryTags: ["vegetarian", "gluten-free"], seasons: ["autumn", "winter"] }, "en-leek-soup": { dietaryTags: ["vegetarian", "gluten-free"], seasons: ["winter", "spring"] }, "en-traybake": { dietaryTags: ["vegan", "gluten-free"], seasons: ["summer", "autumn"] }, "en-cod-peas": { dietaryTags: ["gluten-free"], seasons: ["spring", "summer"] },
+  "de-linseneintopf": { dietaryTags: ["vegan", "gluten-free"], seasons: ["autumn", "winter"] }, "de-pilz-spaetzle": { dietaryTags: ["vegetarian"], seasons: ["spring", "autumn"] }, "de-ofengemuese": { dietaryTags: ["vegetarian", "gluten-free"], seasons: ["summer", "autumn"] }, "de-spargel-risotto": { dietaryTags: ["vegetarian", "gluten-free"], seasons: ["spring"] },
+  "es-garbanzos": { dietaryTags: ["vegan", "gluten-free"], seasons: ["spring", "winter"] }, "es-tortilla": { dietaryTags: ["vegetarian", "gluten-free"], seasons: ["spring", "summer"] }, "es-paella": { dietaryTags: ["vegan", "gluten-free"], seasons: ["summer", "autumn"] }, "es-gazpacho": { dietaryTags: ["vegan"], seasons: ["summer"] },
+  "fr-ratatouille": { dietaryTags: ["vegan", "gluten-free"], seasons: ["summer"] }, "fr-potage": { dietaryTags: ["vegetarian", "gluten-free"], seasons: ["winter", "spring"] }, "fr-quiche": { dietaryTags: ["vegetarian"], seasons: ["spring", "autumn"] }, "fr-lentilles": { dietaryTags: ["vegan", "gluten-free"], seasons: ["autumn", "winter"] },
+};
+
 function makeRecipe(cuisine: CuisineLocale, id: string, title: string, subtitle: string, category: string, minutes: number, calories: number, protein: number, tools: string[], ingredients: string[], steps: string[], imageIndex: number): Recipe {
-  return { id, cuisine, title, subtitle, category, minutes, calories, protein, carbs: Math.max(20, Math.round(calories * 0.11)), fat: Math.max(8, Math.round(calories * 0.035)), estimatedCost: Math.round(75 + calories * 0.28), difficulty: minutes > 34 ? "Orta" : "Kolay", tools, toolTimes: Object.fromEntries(tools.map((tool) => [tool, minutes])), fallbackMethod: "Use a covered pan over a gentle heat as a simple alternative.", image: images[imageIndex % images.length], accent: ["#DDE8DA", "#FCE6D2", "#F9E2DB", "#E0ECE8"][imageIndex % 4], ingredients, steps, tags: [cuisine, category, `${minutes} dk`] };
+  const meta = recipeMeta[id] ?? { dietaryTags: [] as DietaryTag[], seasons: ["spring", "summer", "autumn", "winter"] as Season[] };
+  return { id, cuisine, title, subtitle, category, minutes, calories, protein, carbs: Math.max(20, Math.round(calories * 0.11)), fat: Math.max(8, Math.round(calories * 0.035)), estimatedCost: Math.round(75 + calories * 0.28), difficulty: minutes > 34 ? "Orta" : "Kolay", tools, toolTimes: Object.fromEntries(tools.map((tool) => [tool, minutes])), fallbackMethod: "Use a covered pan over a gentle heat as a simple alternative.", image: images[imageIndex % images.length], accent: ["#DDE8DA", "#FCE6D2", "#F9E2DB", "#E0ECE8"][imageIndex % 4], ingredients, steps, tags: [cuisine, category, `${minutes} dk`], dietaryTags: meta.dietaryTags, seasons: meta.seasons };
 }
 
 export const recipes: Recipe[] = [
@@ -44,12 +54,13 @@ export const recipes: Recipe[] = [
 ];
 
 export function getRecipesForLocale(locale?: CuisineLocale) { return recipes.filter((item) => item.cuisine === (locale ?? "tr-TR")); }
+export function getRecipesForPreferences(locale: CuisineLocale, dietaryPreferences: DietaryPreference[] = [], season: Season = getCurrentSeason()) { const local = getRecipesForLocale(locale); const dietMatched = local.filter((recipe) => recipeMatchesDiet(recipe.dietaryTags, dietaryPreferences)); const seasonal = dietMatched.filter((recipe) => recipe.seasons.includes(season)); return seasonal.length ? seasonal : dietMatched; }
 export function getCategoriesForLocale(locale?: CuisineLocale) { const profile = getCuisineProfile(locale); return [profile.ui.all, ...Array.from(new Set(getRecipesForLocale(profile.code).map((item) => item.category)))]; }
 export const categories = getCategoriesForLocale("tr-TR");
 export const initialPantry = ["Nohut", "Yumurta", "Roka", "Yoğurt", "Limon", "Domates"];
 export const initialWeeklyPlan = [{ day: "Pzt", meal: "Akşam", recipeId: "tr-mercimek" }, { day: "Sal", meal: "Öğle", recipeId: "tr-fasulye" }, { day: "Çar", meal: "Akşam", recipeId: "tr-bulgur" }, { day: "Per", meal: "Akşam", recipeId: "tr-kofte" }];
-export function buildPersonalWeeklyPlan(input: { pantry: string[]; favoriteIngredients: string[]; goal: string; allergies: string[]; kitchenTools: string[]; locale?: CuisineLocale }) { const profile = getCuisineProfile(input.locale); return buildPersonalWeekPlan(getRecipesForLocale(profile.code), input, { days: profile.days, meals: profile.meals }); }
-export function getPersonalRecipeAlternative(input: { pantry: string[]; favoriteIngredients: string[]; goal: string; allergies: string[]; kitchenTools: string[]; locale?: CuisineLocale }, currentRecipeId: string, occupiedRecipeIds: string[]) { return findPersonalMenuAlternative(getRecipesForLocale(input.locale), input, currentRecipeId, occupiedRecipeIds); }
+export function buildPersonalWeeklyPlan(input: { pantry: string[]; favoriteIngredients: string[]; goal: string; allergies: string[]; kitchenTools: string[]; locale?: CuisineLocale; dietaryPreferences?: DietaryPreference[]; season?: Season }) { const profile = getCuisineProfile(input.locale); return buildPersonalWeekPlan(getRecipesForPreferences(profile.code, input.dietaryPreferences, input.season), input, { days: profile.days, meals: profile.meals }); }
+export function getPersonalRecipeAlternative(input: { pantry: string[]; favoriteIngredients: string[]; goal: string; allergies: string[]; kitchenTools: string[]; locale?: CuisineLocale; dietaryPreferences?: DietaryPreference[]; season?: Season }, currentRecipeId: string, occupiedRecipeIds: string[]) { return findPersonalMenuAlternative(getRecipesForPreferences(getCuisineProfile(input.locale).code, input.dietaryPreferences, input.season), input, currentRecipeId, occupiedRecipeIds); }
 export function getEquipmentAdvice(recipe: Recipe, kitchenTools: string[]) { return getAdvice(recipe, kitchenTools); }
 export function buildGroceryList(recipeIds: string[]) { return uniqueShoppingItems(recipeIds.map((id) => recipes.find((item) => item.id === id)).filter((item): item is Recipe => Boolean(item))).map((name) => ({ name, checked: false })); }
 export function getRecipe(id?: string) { return recipes.find((item) => item.id === id) ?? getRecipesForLocale("tr-TR")[0]; }
