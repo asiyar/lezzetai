@@ -68,3 +68,9 @@
 - [x] Ana ekran, plan, tarif ayrıntısı ve AI Şef ekranlarını yeni sistemle geliştirmek
 - [x] Dokunma geri bildirimi, kart geçişi ve durum animasyonlarını iyileştirmek
 - [x] Görsel sistem güncellemesini test etmek ve tutarlılığını doğrulamak
+- [x] Popüler ücretsiz tasarım referanslarından LezzetAI için uygulanabilir ekran ve etkileşim ilkelerini çıkarmak
+- [x] Apple kaynaklı ücretsiz yapay zekâ seçeneklerinin mobil entegrasyon, lisans ve cihaz gereksinimlerini doğrulamak
+- [x] LezzetAI ana deneyimini daha belirgin, premium ve ürünleşmiş bir görsel dil ile yeniden tasarlamak
+- [x] Ana ekran, AI Şef ve canlı pişirme modunda bilgi mimarisini ve hiyerarşiyi yeniden kurmak
+- [x] Uygun ücretsiz Apple yapay zekâ yaklaşımını mevcut AI Şef akışına eklemek veya uygulanabilirlik notunu sunmak
+- [x] Profesyonel tasarım dönüşümü ve yapay zekâ araştırmasını test etmek

@@ -3,43 +3,12 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import type { Recipe } from "@/lib/lezzet-data";
 
 export function RecipeCard({ recipe, compact = false, isFavorite = false, onPress, onToggleFavorite }: { recipe: Recipe; compact?: boolean; isFavorite?: boolean; onPress: () => void; onToggleFavorite?: () => void }) {
-  return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.card, compact && styles.compactCard, pressed && styles.pressed]}>
-      <Image source={recipe.image} style={[styles.image, compact && styles.compactImage]} resizeMode="cover" />
-      <View style={styles.content}>
-        <View style={styles.topline}>
-          <Text style={styles.category}>{recipe.category}</Text>
-          {onToggleFavorite ? (
-            <Pressable onPress={onToggleFavorite} hitSlop={8} style={({ pressed }) => [styles.favorite, pressed && styles.iconPressed]}>
-              <IconSymbol name={isFavorite ? "heart.fill" : "heart"} size={18} color={isFavorite ? "#D4553E" : "#6B756F"} />
-            </Pressable>
-          ) : null}
-        </View>
-        <Text style={styles.title} numberOfLines={compact ? 1 : 2}>{recipe.title}</Text>
-        {!compact ? <Text style={styles.subtitle} numberOfLines={2}>{recipe.subtitle}</Text> : null}
-        <View style={styles.metaRow}>
-          <View style={styles.meta}><IconSymbol name="clock" size={14} color="#6B756F" /><Text style={styles.metaText}>{recipe.minutes} dk</Text></View>
-          <View style={styles.meta}><IconSymbol name="flame.fill" size={14} color="#E77B4D" /><Text style={styles.metaText}>{recipe.calories} kcal</Text></View>
-        </View>
-      </View>
-    </Pressable>
-  );
+  return <Pressable onPress={onPress} style={({ pressed }) => [styles.card, compact && styles.compactCard, pressed && styles.pressed]}>
+    <View style={[styles.imageWrap, compact && styles.compactImageWrap]}><Image source={recipe.image} style={styles.image} resizeMode="cover" />{!compact ? <View style={styles.imageShade} /> : null}{!compact ? <View style={styles.categoryPill}><Text style={styles.categoryPillText}>{recipe.category}</Text></View> : null}{onToggleFavorite ? <Pressable onPress={onToggleFavorite} hitSlop={8} style={({ pressed }) => [styles.favorite, compact && styles.favoriteCompact, pressed && styles.iconPressed]}><IconSymbol name={isFavorite ? "heart.fill" : "heart"} size={18} color={isFavorite ? "#D4553E" : "#1E4D3A"} /></Pressable> : null}</View>
+    <View style={styles.content}><View style={styles.topline}>{compact ? <Text style={styles.category}>{recipe.category}</Text> : <Text style={styles.editorial}>LEZZETAI SEÇKİSİ</Text>}<View style={styles.timeBadge}><IconSymbol name="clock" size={12} color="#1E4D3A" /><Text style={styles.timeText}>{recipe.minutes} dk</Text></View></View><Text style={styles.title} numberOfLines={compact ? 1 : 2}>{recipe.title}</Text>{!compact ? <Text style={styles.subtitle} numberOfLines={2}>{recipe.subtitle}</Text> : null}<View style={styles.metaRow}><View style={styles.meta}><IconSymbol name="flame.fill" size={13} color="#E77B4D" /><Text style={styles.metaText}>{recipe.calories} kcal</Text></View><View style={styles.metaDivider} /><Text style={styles.metaText}>{compact ? "Tarifi aç" : "Detayları incele"}</Text><IconSymbol name="chevron.right" size={14} color="#1E4D3A" /></View></View>
+  </Pressable>;
 }
 
 const styles = StyleSheet.create({
-  card: { width: 244, backgroundColor: "#FFFFFF", borderRadius: 24, overflow: "hidden", borderWidth: 1, borderColor: "#ECEAE4", shadowColor: "#1E2521", shadowOpacity: 0.08, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 3 },
-  compactCard: { width: "100%", flexDirection: "row", borderRadius: 20, minHeight: 112 },
-  image: { width: "100%", height: 150 },
-  compactImage: { width: 104, height: "100%" },
-  content: { flex: 1, padding: 14, gap: 6 },
-  topline: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  category: { fontSize: 11, lineHeight: 16, fontWeight: "700", letterSpacing: 0.25, color: "#1E4D3A", textTransform: "uppercase", flex: 1 },
-  favorite: { paddingLeft: 6, paddingVertical: 2 },
-  title: { color: "#1E2521", fontWeight: "800", fontSize: 16, lineHeight: 21 },
-  subtitle: { color: "#6B756F", fontSize: 12, lineHeight: 17 },
-  metaRow: { flexDirection: "row", alignItems: "center", gap: 11, marginTop: "auto" },
-  meta: { flexDirection: "row", alignItems: "center", gap: 4 },
-  metaText: { color: "#6B756F", fontSize: 12, fontWeight: "600" },
-  pressed: { opacity: 0.84, transform: [{ scale: 0.985 }] },
-  iconPressed: { opacity: 0.62 },
+  card: { width: 254, overflow: "hidden", borderRadius: 25, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8E6DF", shadowColor: "#1E2521", shadowOpacity: 0.1, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 3 }, compactCard: { width: "100%", minHeight: 122, flexDirection: "row", borderRadius: 22 }, imageWrap: { width: "100%", height: 158, overflow: "hidden", position: "relative" }, compactImageWrap: { width: 112, height: "100%" }, image: { width: "100%", height: "100%" }, imageShade: { ...StyleSheet.absoluteFillObject, backgroundColor: "#102A1F", opacity: 0.12 }, categoryPill: { position: "absolute", left: 10, bottom: 10, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 9, backgroundColor: "rgba(251,248,242,0.93)" }, categoryPillText: { color: "#1E4D3A", fontSize: 8, fontWeight: "900", letterSpacing: 0.7, textTransform: "uppercase" }, favorite: { position: "absolute", right: 9, top: 9, width: 33, height: 33, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(251,248,242,0.94)" }, favoriteCompact: { right: 7, top: 7 }, content: { flex: 1, padding: 13, gap: 6 }, topline: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 7 }, category: { flex: 1, color: "#1E4D3A", fontSize: 9, fontWeight: "900", letterSpacing: 0.65, textTransform: "uppercase" }, editorial: { flex: 1, color: "#839088", fontSize: 8, fontWeight: "900", letterSpacing: 0.95 }, timeBadge: { flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 6, paddingVertical: 4, borderRadius: 8, backgroundColor: "#DDE8DA" }, timeText: { color: "#1E4D3A", fontSize: 9, fontWeight: "900" }, title: { color: "#1E2521", fontSize: 16, lineHeight: 21, fontWeight: "800", letterSpacing: -0.25 }, subtitle: { color: "#6B756F", fontSize: 11, lineHeight: 16 }, metaRow: { minHeight: 20, marginTop: "auto", flexDirection: "row", alignItems: "center", gap: 5 }, meta: { flexDirection: "row", alignItems: "center", gap: 3 }, metaDivider: { height: 11, width: 1, backgroundColor: "#E1DED7", marginHorizontal: 1 }, metaText: { color: "#6B756F", fontSize: 10, fontWeight: "800" }, pressed: { opacity: 0.86, transform: [{ scale: 0.985 }] }, iconPressed: { opacity: 0.62 },
 });

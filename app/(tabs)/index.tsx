@@ -2,6 +2,7 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-nati
 import { router } from "expo-router";
 
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { MotionReveal } from "@/components/motion-reveal";
 import { RecipeCard } from "@/components/recipe-card";
 import { SectionTitle } from "@/components/section-title";
 import { ScreenContainer } from "@/components/screen-container";
@@ -10,128 +11,35 @@ import { useLezzet } from "@/lib/lezzet-context";
 import { getAdaptiveTargets } from "@/lib/wearable-utils";
 
 export default function TodayScreen() {
-  const { favorites, pantry, profile, wearableActivity, journalEntries, recipeFeedback, toggleFavorite } = useLezzet();
+  const { favorites, pantry, pantryMeta, profile, wearableActivity, journalEntries, recipeFeedback, toggleFavorite } = useLezzet();
   const heroRecipe = recipes[0];
-  const adaptiveTargets = getAdaptiveTargets(profile.calories, wearableActivity?.activeCalories ?? 0);
+  const targets = getAdaptiveTargets(profile.calories, wearableActivity?.activeCalories ?? 0);
+  const urgentItems = pantry.filter((item) => (pantryMeta[item]?.expiresInDays ?? 7) <= 2);
+  const coachCopy = journalEntries.length ? `${journalEntries.length} tarif deneyimin, sonraki önerileri şekillendiriyor.` : Object.keys(recipeFeedback).length ? "Geri bildirimlerinle daha doğru tarifler seçiyoruz." : "Bir tarif pişir; tempo ve zorluk tercihlerini öğrenelim.";
 
-  return (
-    <ScreenContainer className="flex-1" containerClassName="bg-background">
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.eyebrow}>GÜNAYDIN, DENİZ</Text>
-            <Text style={styles.greeting}>Bugün ne iyi gelir?</Text>
-          </View>
-          <Pressable onPress={() => router.push("/(tabs)/profile" as never)} style={({ pressed }) => [styles.avatar, pressed && { opacity: 0.65 }]}>
-            <Text style={styles.avatarText}>D</Text>
-          </Pressable>
-        </View>
+  return <ScreenContainer className="flex-1" containerClassName="bg-background"><ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+    <MotionReveal><View style={styles.header}><View><Text style={styles.eyebrow}>MUTFAK PUSULASI · BUGÜN</Text><Text style={styles.greeting}>Günün akışını<br />sen belirle.</Text></View><Pressable onPress={() => router.push("/(tabs)/profile" as never)} style={({ pressed }) => [styles.avatar, pressed && { opacity: 0.7, transform: [{ scale: 0.96 }] }]}><Text style={styles.avatarText}>D</Text><View style={styles.avatarDot} /></Pressable></View></MotionReveal>
 
-        <Pressable onPress={() => router.push(`/recipe/${heroRecipe.id}` as never)} style={({ pressed }) => [styles.hero, pressed && styles.pressed]}>
-          <Image source={heroRecipe.image} style={styles.heroImage} resizeMode="cover" />
-          <View style={styles.heroShade} />
-          <View style={styles.heroTag}>
-            <IconSymbol name="sparkles" size={14} color="#1E4D3A" />
-            <Text style={styles.heroTagText}>AI ŞEFİN SEÇTİ</Text>
-          </View>
-          <View style={styles.heroCopy}>
-            <Text style={styles.heroTitle}>Kilerindeki malzemelerle dengeli bir öğün</Text>
-            <View style={styles.heroMeta}>
-              <Text style={styles.heroMetaText}>{heroRecipe.minutes} dakika</Text>
-              <View style={styles.dot} />
-              <Text style={styles.heroMetaText}>{heroRecipe.calories} kcal</Text>
-            </View>
-          </View>
-        </Pressable>
+    <MotionReveal delay={55}><Pressable onPress={() => router.push(`/recipe/${heroRecipe.id}` as never)} style={({ pressed }) => [styles.hero, pressed && styles.pressed]}><Image source={heroRecipe.image} style={styles.heroImage} resizeMode="cover" /><View style={styles.heroTopShade} /><View style={styles.heroBottomShade} /><View style={styles.heroTop}><View style={styles.livePill}><View style={styles.liveDot} /><Text style={styles.liveText}>BUGÜNÜN ÖNERİSİ</Text></View><View style={styles.heroSave}><IconSymbol name="sparkles" size={16} color="#1E4D3A" /></View></View><View style={styles.heroCopy}><Text style={styles.heroOverline}>KİLER ODAKLI · {heroRecipe.minutes} DK</Text><Text style={styles.heroTitle}>{heroRecipe.title}</Text><View style={styles.heroFooter}><Text style={styles.heroMeta}>{heroRecipe.calories} kcal</Text><View style={styles.heroAction}><Text style={styles.heroActionText}>Tarifi aç</Text><IconSymbol name="chevron.right" size={16} color="#FFFFFF" /></View></View></View></Pressable></MotionReveal>
 
-          <View style={styles.metrics}>
-            <View style={styles.metricCopy}>
-              <Text style={styles.metricTitle}>Günün dengesi</Text>
-              <Text style={styles.metricSubtitle}>{adaptiveTargets.calories} kcal hedefi{wearableActivity ? ` · +${adaptiveTargets.adjustment} hareket uyarlaması` : ""}</Text>
-            </View>
-            <View style={styles.ringOuter}><View style={styles.ringInner}><Text style={styles.ringText}>39%</Text></View></View>
-          </View>
+    <MotionReveal delay={110}><View style={styles.fuelDeck}><View style={styles.fuelHead}><View><Text style={styles.deckLabel}>GÜNLÜK YAKIT</Text><Text style={styles.deckTitle}>{targets.calories} <Text style={styles.deckUnit}>kcal hedef</Text></Text></View><View style={styles.progressBadge}><Text style={styles.progressValue}>39%</Text><Text style={styles.progressLabel}>tamam</Text></View></View><View style={styles.macroGrid}><Macro label="Protein" value={`${targets.protein}g`} color="#DDE8DA" /><Macro label="Karbonhidrat" value={`${targets.carbs}g`} color="#FCE6D2" /><Macro label="Yağ" value={`${targets.fat}g`} color="#ECE4D7" /></View>{wearableActivity ? <View style={styles.activityLine}><IconSymbol name="sparkles" size={14} color="#1E4D3A" /><Text style={styles.activityText}>{wearableActivity.steps.toLocaleString("tr-TR")} adım senkronize edildi · +{targets.adjustment} kcal uyarlama</Text></View> : <Pressable onPress={() => router.push("/wearables" as never)} style={styles.activityLine}><IconSymbol name="sparkles" size={14} color="#1E4D3A" /><Text style={styles.activityText}>Hareket verini bağla, hedefini otomatik uyarla</Text><IconSymbol name="chevron.right" size={15} color="#1E4D3A" /></Pressable>}</View></MotionReveal>
 
-        <View style={styles.coachCard}><View style={styles.coachIcon}><IconSymbol name="sparkles" size={21} color="#FFFFFF" /></View><View style={{ flex: 1 }}><Text style={styles.coachTitle}>Bugünün mutfak koçu</Text><Text style={styles.coachText}>{journalEntries.length ? `${journalEntries.length} deneyimini değerlendirdik. Beğendiklerine yakın bir öğünü akşama planla.` : Object.keys(recipeFeedback).length ? "Geri bildirimlerinle önerileri kişiselleştiriyoruz. Bugün yeni bir tarife şans ver." : "İlk tarifini pişirdiğinde süre ve zorluk tercihlerini öğrenmeye başlarız."}</Text></View><Pressable onPress={() => router.push("/journal" as never)} style={styles.coachArrow}><IconSymbol name="chevron.right" size={19} color="#1E4D3A" /></Pressable></View>
+    <MotionReveal delay={165}><View style={styles.actionGrid}><Pressable onPress={() => router.push("/(tabs)/chef" as never)} style={({ pressed }) => [styles.aiAction, pressed && styles.pressed]}><View style={styles.actionTop}><View style={styles.aiIcon}><IconSymbol name="sparkles" size={19} color="#FFFFFF" /></View><Text style={styles.actionTag}>AI ŞEF</Text></View><Text style={styles.aiActionTitle}>Bir fikri{`\n`}sofraya dönüştür.</Text><Text style={styles.aiActionText}>Malzeme, hedef ve süreye göre konuşalım.</Text><View style={styles.actionArrow}><IconSymbol name="chevron.right" size={18} color="#FFFFFF" /></View></Pressable><View style={styles.sideActions}><Pressable onPress={() => router.push("/scan-ingredients" as never)} style={({ pressed }) => [styles.sideAction, pressed && styles.pressed]}><View style={[styles.sideIcon, { backgroundColor: "#FCE6D2" }]}><IconSymbol name="camera.fill" size={19} color="#B7652E" /></View><View style={{ flex: 1 }}><Text style={styles.sideTitle}>Tara & pişir</Text><Text style={styles.sideText}>Fotoğraftan malzeme tanı</Text></View></Pressable><Pressable onPress={() => router.push("/pantry" as never)} style={({ pressed }) => [styles.sideAction, pressed && styles.pressed]}><View style={[styles.sideIcon, { backgroundColor: "#DDE8DA" }]}><IconSymbol name="cabinet.fill" size={19} color="#1E4D3A" /></View><View style={{ flex: 1 }}><Text style={styles.sideTitle}>Kiler radarı</Text><Text style={styles.sideText}>{urgentItems.length ? `${urgentItems.join(", ")} öncelikli` : `${pantry.length} malzeme hazır`}</Text></View></Pressable></View></View></MotionReveal>
 
-        <View style={styles.quickRow}>
-          <Pressable onPress={() => router.push("/(tabs)/chef" as never)} style={({ pressed }) => [styles.quickCard, styles.quickPrimary, pressed && styles.pressed]}>
-            <View style={styles.quickIcon}><IconSymbol name="sparkles" size={21} color="#1E4D3A" /></View>
-            <View><Text style={styles.quickTitle}>Bana fikir ver</Text><Text style={styles.quickSub}>AI Şef ile konuş</Text></View>
-          </Pressable>
-          <Pressable onPress={() => router.push("/pantry" as never)} style={({ pressed }) => [styles.quickCard, pressed && styles.pressed]}>
-            <View style={[styles.quickIcon, { backgroundColor: "#FCE6D2" }]}><IconSymbol name="cabinet.fill" size={20} color="#B7652E" /></View>
-            <View><Text style={styles.quickTitle}>Kilerim</Text><Text style={styles.quickSub}>{pantry.length} malzeme</Text></View>
-          </Pressable>
-        </View>
+    <MotionReveal delay={220}><Pressable onPress={() => router.push("/journal" as never)} style={({ pressed }) => [styles.coach, pressed && styles.pressed]}><View style={styles.coachIndex}><Text style={styles.coachIndexValue}>01</Text></View><View style={{ flex: 1 }}><Text style={styles.coachKicker}>KİŞİSEL MUTFAK KOÇU</Text><Text style={styles.coachTitle}>{coachCopy}</Text></View><View style={styles.coachArrow}><IconSymbol name="chevron.right" size={18} color="#1E4D3A" /></View></Pressable></MotionReveal>
 
-        <Pressable onPress={() => router.push("/scan-ingredients" as never)} style={({ pressed }) => [styles.scanBanner, pressed && styles.pressed]}>
-          <View style={styles.scanIcon}><IconSymbol name="camera.fill" size={21} color="#FFFFFF" /></View>
-          <View style={{ flex: 1 }}><Text style={styles.scanTitle}>Malzemeleri fotoğrafla tanı</Text><Text style={styles.scanText}>Çek, tanıyalım ve sana uygun tarif çıkaralım.</Text></View>
-          <IconSymbol name="chevron.right" size={20} color="#1E4D3A" />
-        </Pressable>
-
-        <View style={styles.sectionWrap}>
-          <SectionTitle title="Sana göre seçtik" action="Tümünü gör" onPress={() => router.push("/(tabs)/discover" as never)} />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalCards}>
-            {recipes.slice(1).map((recipe) => (
-              <RecipeCard key={recipe.id} recipe={recipe} isFavorite={favorites.includes(recipe.id)} onToggleFavorite={() => toggleFavorite(recipe.id)} onPress={() => router.push(`/recipe/${recipe.id}` as never)} />
-            ))}
-          </ScrollView>
-        </View>
-
-        <View style={styles.pantryBanner}>
-          <View style={styles.pantryBannerIcon}><IconSymbol name="leaf.fill" size={22} color="#1E4D3A" /></View>
-          <View style={styles.pantryBannerCopy}><Text style={styles.pantryBannerTitle}>Sıfır atık ipucu</Text><Text style={styles.pantryBannerText}>Roka ve limonunu bugün değerlendirebilirsin.</Text></View>
-          <Pressable onPress={() => router.push("/pantry" as never)} style={({ pressed }) => [styles.pantryArrow, pressed && { opacity: 0.6 }]}><IconSymbol name="chevron.right" size={20} color="#1E4D3A" /></Pressable>
-        </View>
-      </ScrollView>
-    </ScreenContainer>
-  );
+    <MotionReveal delay={265}><View style={styles.section}><SectionTitle title="Sana göre seçtik" action="Keşfet" onPress={() => router.push("/(tabs)/discover" as never)} /><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalCards}>{recipes.slice(1).map((recipe) => <RecipeCard key={recipe.id} recipe={recipe} isFavorite={favorites.includes(recipe.id)} onToggleFavorite={() => toggleFavorite(recipe.id)} onPress={() => router.push(`/recipe/${recipe.id}` as never)} />)}</ScrollView></View></MotionReveal>
+    <Pressable onPress={() => router.push("/(tabs)/plan" as never)} style={({ pressed }) => [styles.planLink, pressed && styles.pressed]}><View><Text style={styles.planKicker}>HAFTANIN GÖRÜNÜMÜ</Text><Text style={styles.planTitle}>Menünü akıllıca planla.</Text></View><View style={styles.planButton}><IconSymbol name="calendar" size={18} color="#FFFFFF" /></View></Pressable>
+  </ScrollView></ScreenContainer>;
 }
 
+function Macro({ label, value, color }: { label: string; value: string; color: string }) { return <View style={[styles.macro, { backgroundColor: color }]}><Text style={styles.macroValue}>{value}</Text><Text style={styles.macroLabel}>{label}</Text></View>; }
+
 const styles = StyleSheet.create({
-  content: { padding: 20, paddingBottom: 38, gap: 22 },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  eyebrow: { color: "#6B756F", fontSize: 11, fontWeight: "800", letterSpacing: 1.1 },
-  greeting: { color: "#1E2521", fontSize: 29, lineHeight: 35, fontWeight: "800", letterSpacing: -0.95, marginTop: 3 },
-  avatar: { alignItems: "center", justifyContent: "center", width: 42, height: 42, borderRadius: 21, backgroundColor: "#1E4D3A", borderWidth: 3, borderColor: "#DDE8DA" },
-  avatarText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
-  hero: { height: 258, borderRadius: 30, overflow: "hidden", position: "relative", justifyContent: "space-between", padding: 19, shadowColor: "#1E2521", shadowOpacity: 0.12, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 4 },
-  heroImage: { ...StyleSheet.absoluteFillObject, width: undefined, height: undefined },
-  heroShade: { ...StyleSheet.absoluteFillObject, backgroundColor: "#0C251A", opacity: 0.38 },
-  heroTag: { alignSelf: "flex-start", flexDirection: "row", gap: 6, alignItems: "center", backgroundColor: "#FBF8F2", borderRadius: 14, paddingHorizontal: 10, paddingVertical: 7 },
-  heroTagText: { color: "#1E4D3A", fontSize: 10, fontWeight: "900", letterSpacing: 0.65 },
-  heroCopy: { gap: 7 },
-  heroTitle: { color: "#FFFFFF", fontSize: 27, fontWeight: "800", lineHeight: 33, maxWidth: "90%", letterSpacing: -0.8 },
-  heroMeta: { flexDirection: "row", alignItems: "center", gap: 8 },
-  heroMetaText: { color: "#FFFFFF", fontSize: 13, fontWeight: "700" },
-  dot: { width: 4, height: 4, borderRadius: 4, backgroundColor: "#FFFFFF" },
-  metrics: { minHeight: 96, flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#1E4D3A", borderRadius: 26, paddingHorizontal: 18, paddingVertical: 15, shadowColor: "#1E4D3A", shadowOpacity: 0.12, shadowRadius: 14, shadowOffset: { width: 0, height: 7 }, elevation: 2 },
-  metricCopy: { flex: 1, paddingRight: 12 },
-  metricTitle: { color: "#FFFFFF", fontSize: 17, fontWeight: "800" },
-  metricSubtitle: { color: "#DDE8DA", fontSize: 12, lineHeight: 17, marginTop: 3 },
-  ringOuter: { width: 64, height: 64, borderRadius: 32, borderWidth: 6, borderColor: "#F4A261", alignItems: "center", justifyContent: "center" },
-  ringInner: { width: 45, height: 45, borderRadius: 23, backgroundColor: "#2E634C", alignItems: "center", justifyContent: "center" },
-  ringText: { color: "#FFFFFF", fontWeight: "900", fontSize: 13 },
-  coachCard: { flexDirection: "row", alignItems: "center", gap: 10, padding: 15, borderRadius: 22, backgroundColor: "#FCE6D2", marginTop: -7, borderWidth: 1, borderColor: "#F3D4BA" }, coachIcon: { width: 40, height: 40, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: "#B7652E" }, coachTitle: { color: "#754626", fontSize: 13, fontWeight: "800" }, coachText: { color: "#9A6138", fontSize: 11, lineHeight: 16, marginTop: 2 }, coachArrow: { width: 28, height: 28, alignItems: "center", justifyContent: "center" },
-  quickRow: { flexDirection: "row", gap: 12 },
-  quickCard: { flex: 1, minHeight: 83, borderRadius: 20, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#EAE7E0", padding: 13, gap: 8 },
-  quickPrimary: { backgroundColor: "#DDE8DA", borderColor: "#C9DCC4" },
-  quickIcon: { width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "#FBF8F2" },
-  quickTitle: { color: "#1E2521", fontSize: 14, fontWeight: "800" },
-  quickSub: { color: "#6B756F", fontSize: 11, fontWeight: "600", marginTop: 2 },
-  scanBanner: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#FFFFFF", borderRadius: 20, borderWidth: 1, borderColor: "#C9DCC4", padding: 13, marginTop: -12 },
-  scanIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: "#1E4D3A", alignItems: "center", justifyContent: "center" },
-  scanTitle: { color: "#1E2521", fontSize: 14, fontWeight: "800" },
-  scanText: { color: "#6B756F", fontSize: 11, lineHeight: 16, marginTop: 2 },
-  sectionWrap: { marginTop: 2 },
-  horizontalCards: { gap: 12, paddingRight: 20 },
-  pantryBanner: { flexDirection: "row", alignItems: "center", backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#EAE7E0", borderRadius: 22, padding: 14, gap: 12 },
-  pantryBannerIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: "#DDE8DA", alignItems: "center", justifyContent: "center" },
-  pantryBannerCopy: { flex: 1 },
-  pantryBannerTitle: { color: "#1E2521", fontWeight: "800", fontSize: 14 },
-  pantryBannerText: { color: "#6B756F", fontSize: 12, lineHeight: 17, marginTop: 2 },
-  pantryArrow: { width: 36, height: 36, alignItems: "center", justifyContent: "center" },
-  pressed: { opacity: 0.86, transform: [{ scale: 0.985 }] },
+  content: { padding: 20, paddingBottom: 38, gap: 18 }, header: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", paddingTop: 3 }, eyebrow: { color: "#6B756F", fontSize: 10, fontWeight: "900", letterSpacing: 1.55 }, greeting: { color: "#1E2521", fontSize: 33, lineHeight: 36, fontWeight: "800", letterSpacing: -1.3, marginTop: 8 }, avatar: { width: 46, height: 46, borderRadius: 23, backgroundColor: "#1E4D3A", alignItems: "center", justifyContent: "center", shadowColor: "#1E4D3A", shadowOpacity: 0.2, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 2 }, avatarText: { color: "#FFFFFF", fontSize: 16, fontWeight: "900" }, avatarDot: { position: "absolute", right: 1, bottom: 2, width: 11, height: 11, borderRadius: 6, borderWidth: 2, borderColor: "#FBF8F2", backgroundColor: "#F4A261" },
+  hero: { height: 330, overflow: "hidden", borderRadius: 32, position: "relative", justifyContent: "space-between", padding: 18, shadowColor: "#1E2521", shadowOpacity: 0.16, shadowRadius: 23, shadowOffset: { width: 0, height: 12 }, elevation: 5 }, heroImage: { ...StyleSheet.absoluteFillObject, width: undefined, height: undefined }, heroTopShade: { ...StyleSheet.absoluteFillObject, backgroundColor: "#0B2016", opacity: 0.2 }, heroBottomShade: { ...StyleSheet.absoluteFillObject, top: "35%", backgroundColor: "#0B2016", opacity: 0.64 }, heroTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }, livePill: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 13, backgroundColor: "rgba(251,248,242,0.94)" }, liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#E28142" }, liveText: { color: "#1E4D3A", fontSize: 9, fontWeight: "900", letterSpacing: 0.75 }, heroSave: { width: 33, height: 33, borderRadius: 12, backgroundColor: "rgba(251,248,242,0.93)", alignItems: "center", justifyContent: "center" }, heroCopy: { gap: 7 }, heroOverline: { color: "#DDE8DA", fontSize: 10, fontWeight: "900", letterSpacing: 1.1 }, heroTitle: { color: "#FFFFFF", fontSize: 30, fontWeight: "800", lineHeight: 35, letterSpacing: -1.05, maxWidth: "94%" }, heroFooter: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 3 }, heroMeta: { color: "#FFFFFF", fontSize: 13, fontWeight: "700" }, heroAction: { flexDirection: "row", alignItems: "center", gap: 4 }, heroActionText: { color: "#FFFFFF", fontSize: 11, fontWeight: "900" },
+  fuelDeck: { backgroundColor: "#173E2F", borderRadius: 26, padding: 16, gap: 14 }, fuelHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }, deckLabel: { color: "#9CC8AE", fontSize: 10, fontWeight: "900", letterSpacing: 1.1 }, deckTitle: { color: "#FFFFFF", fontSize: 25, fontWeight: "900", letterSpacing: -0.65, marginTop: 3 }, deckUnit: { color: "#C2D9C9", fontSize: 12, fontWeight: "700" }, progressBadge: { width: 47, height: 47, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: "#285C47" }, progressValue: { color: "#FFFFFF", fontSize: 13, fontWeight: "900" }, progressLabel: { color: "#A9CDB6", fontSize: 8, fontWeight: "800", marginTop: 1 }, macroGrid: { flexDirection: "row", gap: 8 }, macro: { flex: 1, borderRadius: 14, padding: 10, gap: 2 }, macroValue: { color: "#1E2521", fontSize: 14, fontWeight: "900" }, macroLabel: { color: "#536057", fontSize: 9, fontWeight: "800" }, activityLine: { minHeight: 31, borderRadius: 11, paddingHorizontal: 9, gap: 6, flexDirection: "row", alignItems: "center", backgroundColor: "#EAF2E9" }, activityText: { flex: 1, color: "#1E4D3A", fontSize: 10, fontWeight: "800" },
+  actionGrid: { flexDirection: "row", gap: 11 }, aiAction: { width: "49%", minHeight: 183, borderRadius: 25, padding: 15, backgroundColor: "#E5EEE2", justifyContent: "space-between" }, actionTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }, aiIcon: { width: 36, height: 36, borderRadius: 13, backgroundColor: "#1E4D3A", alignItems: "center", justifyContent: "center" }, actionTag: { color: "#1E4D3A", fontSize: 9, fontWeight: "900", letterSpacing: 0.8 }, aiActionTitle: { color: "#1E2521", fontSize: 21, lineHeight: 24, fontWeight: "800", letterSpacing: -0.65, marginTop: 10 }, aiActionText: { color: "#597061", fontSize: 10, lineHeight: 15, marginTop: 5 }, actionArrow: { width: 33, height: 33, borderRadius: 12, alignItems: "center", justifyContent: "center", alignSelf: "flex-end", backgroundColor: "#1E4D3A" }, sideActions: { flex: 1, gap: 11 }, sideAction: { flex: 1, minHeight: 86, padding: 11, gap: 8, borderRadius: 21, justifyContent: "center", backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#EAE7E0" }, sideIcon: { width: 33, height: 33, borderRadius: 11, alignItems: "center", justifyContent: "center" }, sideTitle: { color: "#1E2521", fontSize: 12, fontWeight: "900" }, sideText: { color: "#6B756F", fontSize: 9, lineHeight: 13, marginTop: 2 },
+  coach: { flexDirection: "row", alignItems: "center", gap: 11, padding: 13, borderRadius: 20, backgroundColor: "#FCE6D2", borderWidth: 1, borderColor: "#F1D6C0" }, coachIndex: { width: 37, height: 37, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: "#B7652E" }, coachIndexValue: { color: "#FFFFFF", fontSize: 11, fontWeight: "900" }, coachKicker: { color: "#A45F33", fontSize: 9, fontWeight: "900", letterSpacing: 0.9 }, coachTitle: { color: "#754626", fontSize: 12, lineHeight: 17, fontWeight: "800", marginTop: 2 }, coachArrow: { width: 30, height: 30, borderRadius: 11, alignItems: "center", justifyContent: "center", backgroundColor: "#FFF1E5" },
+  section: { marginTop: 4 }, horizontalCards: { gap: 12, paddingRight: 20 }, planLink: { marginTop: 3, flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 16, borderRadius: 22, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#D7E5D6" }, planKicker: { color: "#6B756F", fontSize: 9, fontWeight: "900", letterSpacing: 1.05 }, planTitle: { color: "#1E2521", fontSize: 17, fontWeight: "800", marginTop: 3, letterSpacing: -0.35 }, planButton: { width: 42, height: 42, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: "#1E4D3A" }, pressed: { opacity: 0.86, transform: [{ scale: 0.985 }] },
 });

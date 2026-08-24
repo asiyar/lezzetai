@@ -14,6 +14,9 @@ importers:
       '@kingstinct/react-native-healthkit':
         specifier: ^14.0.2
         version: 14.0.2(react-native-nitro-modules@0.37.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      '@ratley/react-native-apple-foundation-models':
+        specifier: ^0.1.1
+        version: 0.1.1(expo@54.0.29)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       '@react-native-async-storage/async-storage':
         specifier: ^2.2.0
         version: 2.2.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))
@@ -1923,6 +1926,13 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  '@ratley/react-native-apple-foundation-models@0.1.1':
+    resolution: {integrity: sha512-uo4yxEfhDJlJ6XiwC67qP+0ayC4rwn2MW9tpnbN0qB1LdWc+S+TvMwUhS/Qy8POCN7bp5ZBKnL96f11bvuysFQ==}
+    peerDependencies:
+      expo: '*'
+      react: '*'
+      react-native: '*'
 
   '@react-native-async-storage/async-storage@2.2.0':
     resolution: {integrity: sha512-gvRvjR5JAaUZF8tv2Kcq/Gbt3JHwbKFYfmb445rhOj6NUMx3qPLixmDx5pZAyb9at1bYvJ4/eTUipU5aki45xw==}
@@ -7960,6 +7970,12 @@ snapshots:
       react: 19.1.0
     optionalDependencies:
       '@types/react': 19.1.17
+
+  '@ratley/react-native-apple-foundation-models@0.1.1(expo@54.0.29)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      expo: 54.0.29(@babel/core@7.28.5)(@expo/metro-runtime@6.1.2)(expo-router@6.0.19)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      react: 19.1.0
+      react-native: 0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)
 
   '@react-native-async-storage/async-storage@2.2.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))':
     dependencies:
