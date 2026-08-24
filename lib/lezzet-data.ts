@@ -1,148 +1,55 @@
 import type { ImageSourcePropType } from "react-native";
+
+import { getCuisineProfile, type CuisineLocale } from "@/lib/cuisine-locale";
+import { getEquipmentAdvice as getAdvice } from "@/lib/equipment-advice";
 import { uniqueShoppingItems } from "@/lib/meal-planning";
 import { buildPersonalWeekPlan, findPersonalMenuAlternative } from "@/lib/personal-menu";
-import { getEquipmentAdvice as getAdvice } from "@/lib/equipment-advice";
 
 export type Recipe = {
-  id: string;
-  title: string;
-  subtitle: string;
-  category: string;
-  minutes: number;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  estimatedCost: number;
-  difficulty: "Kolay" | "Orta";
-  tools: string[];
-  toolTimes: Record<string, number>;
-  fallbackMethod: string;
-  image: ImageSourcePropType;
-  accent: string;
-  ingredients: string[];
-  steps: string[];
-  tags: string[];
+  id: string; cuisine: CuisineLocale; title: string; subtitle: string; category: string; minutes: number; calories: number; protein: number; carbs: number; fat: number; estimatedCost: number; difficulty: "Kolay" | "Orta"; tools: string[]; toolTimes: Record<string, number>; fallbackMethod: string; image: ImageSourcePropType; accent: string; ingredients: string[]; steps: string[]; tags: string[];
 };
 
+const images = [
+  require("../assets/images/food/enerji-kasesi.jpg"),
+  require("../assets/images/food/firin-domates.jpg"),
+  require("../assets/images/food/mezze.jpg"),
+  require("../assets/images/food/akdeniz-tabagi.jpg"),
+];
+
+function makeRecipe(cuisine: CuisineLocale, id: string, title: string, subtitle: string, category: string, minutes: number, calories: number, protein: number, tools: string[], ingredients: string[], steps: string[], imageIndex: number): Recipe {
+  return { id, cuisine, title, subtitle, category, minutes, calories, protein, carbs: Math.max(20, Math.round(calories * 0.11)), fat: Math.max(8, Math.round(calories * 0.035)), estimatedCost: Math.round(75 + calories * 0.28), difficulty: minutes > 34 ? "Orta" : "Kolay", tools, toolTimes: Object.fromEntries(tools.map((tool) => [tool, minutes])), fallbackMethod: "Use a covered pan over a gentle heat as a simple alternative.", image: images[imageIndex % images.length], accent: ["#DDE8DA", "#FCE6D2", "#F9E2DB", "#E0ECE8"][imageIndex % 4], ingredients, steps, tags: [cuisine, category, `${minutes} dk`] };
+}
+
 export const recipes: Recipe[] = [
-  {
-    id: "yesil-enerji-kasesi",
-    title: "Yeşil Enerji Kasesi",
-    subtitle: "Avokado, nohut ve limonlu tahin sos",
-    category: "Hızlı & Dengeli",
-    minutes: 18,
-    calories: 480,
-    protein: 20,
-    carbs: 42,
-    fat: 22,
-    estimatedCost: 155,
-    difficulty: "Kolay",
-    tools: ["Tava", "Tencere"],
-    toolTimes: { "Tava": 18, "Tencere": 22 },
-    fallbackMethod: "Tava yoksa nohudu küçük bir tencerede 5 dakika ısıtıp kâsede servis edebilirsin.",
-    image: require("../assets/images/food/enerji-kasesi.jpg"),
-    accent: "#DDE8DA",
-    ingredients: ["1 su bardağı haşlanmış nohut", "Yarım avokado", "1 küçük salatalık", "2 avuç roka", "3 yemek kaşığı tahin", "Yarım limon", "1 çay kaşığı kimyon"],
-    steps: ["Nohutları kimyon ve bir tutam tuzla tavada 4 dakika ısıt.", "Rokayı, dilimlenmiş salatalığı ve avokadoyu geniş bir kâsede birleştir.", "Tahin, limon suyu ve iki kaşık suyu pürüzsüz olana kadar çırp.", "Sıcak nohutları ekle, sosu gezdir ve taze otlarla servis et."],
-    tags: ["Vegan", "Lif zengini", "18 dk"],
-  },
-  {
-    id: "firin-domatesli-yumurta",
-    title: "Fırın Domatesli Yumurta",
-    subtitle: "Fesleğenli yoğurt ve kızarmış ekmekle",
-    category: "Kahvaltı",
-    minutes: 24,
-    calories: 365,
-    protein: 24,
-    carbs: 31,
-    fat: 18,
-    estimatedCost: 130,
-    difficulty: "Kolay",
-    tools: ["Fırın", "Air Fryer"],
-    toolTimes: { "Air Fryer": 18, "Fırın": 24 },
-    fallbackMethod: "Fırın veya air fryer yoksa domates ve yumurtayı kapaklı tavada kısık ateşte pişir.",
-    image: require("../assets/images/food/firin-domates.jpg"),
-    accent: "#FCE6D2",
-    ingredients: ["2 yumurta", "10 çeri domates", "1 diş sarımsak", "2 yemek kaşığı yoğurt", "1 dilim tam tahıllı ekmek", "Taze fesleğen"],
-    steps: ["Domatesleri sarımsak ve zeytinyağıyla 200 derecede 12 dakika pişir.", "Domateslerin arasına iki yumurtayı dikkatle kır.", "Yumurtalar dilediğin kıvama gelene kadar 6-8 dakika daha fırınla.", "Yoğurt, fesleğen ve kızarmış ekmekle servis et."],
-    tags: ["Yüksek protein", "24 dk", "Kahvaltı"],
-  },
-  {
-    id: "akdeniz-mezze-tabagi",
-    title: "Akdeniz Mezze Tabağı",
-    subtitle: "Renkli sebzeler, yoğurtlu dip ve zeytinyağı",
-    category: "Paylaşmalık",
-    minutes: 28,
-    calories: 420,
-    protein: 16,
-    carbs: 48,
-    fat: 20,
-    estimatedCost: 210,
-    difficulty: "Orta",
-    tools: ["Fırın", "Air Fryer"],
-    toolTimes: { "Air Fryer": 20, "Fırın": 28 },
-    fallbackMethod: "Fırın veya air fryer yoksa sebzeleri ince dilimleyip tavada parti parti yumuşatabilirsin.",
-    image: require("../assets/images/food/mezze.jpg"),
-    accent: "#F9E2DB",
-    ingredients: ["2 patlıcan", "1 pancar", "1 kâse süzme yoğurt", "Yarım limon", "Maydanoz", "Zeytinyağı", "Taze ekmek"],
-    steps: ["Patlıcan ve pancarı zeytinyağıyla 200 derecede yumuşayana kadar fırınla.", "Yoğurdu limon suyu ve tuzla karıştır.", "Sebzeleri, yoğurtlu dip ve taze otlarla bir servis tabağında birleştir.", "Üzerine zeytinyağı gezdirip ılık ekmekle sun."],
-    tags: ["Sebze ağırlıklı", "Paylaşmalık", "28 dk"],
-  },
-  {
-    id: "akdeniz-somon-tabagi",
-    title: "Akdeniz Somon Tabağı",
-    subtitle: "Fırın sebzeleri ve limonlu yeşilliklerle",
-    category: "Akşam Yemeği",
-    minutes: 30,
-    calories: 560,
-    protein: 38,
-    carbs: 28,
-    fat: 29,
-    estimatedCost: 310,
-    difficulty: "Orta",
-    tools: ["Fırın", "Air Fryer", "Tava"],
-    toolTimes: { "Air Fryer": 18, "Tava": 18, "Fırın": 30 },
-    fallbackMethod: "Fırın veya air fryer yoksa somonu yapışmaz tavada orta ateşte her yüzünü 4-5 dakika pişir.",
-    image: require("../assets/images/food/akdeniz-tabagi.jpg"),
-    accent: "#E0ECE8",
-    ingredients: ["150 g somon", "1 küçük kabak", "1 kırmızı biber", "10 çeri domates", "Yarım limon", "Taze dereotu", "1 avuç roka"],
-    steps: ["Sebzeleri zeytinyağıyla harmanlayıp 200 derecede 15 dakika fırınla.", "Somonu tuz, limon kabuğu ve dereotuyla tatlandır.", "Somonu sebzelerin yanına koyup 10-12 dakika daha pişir.", "Roka ve limon dilimleriyle tazeleyerek servis et."],
-    tags: ["Omega-3", "Yüksek protein", "30 dk"],
-  },
+  makeRecipe("tr-TR", "tr-mercimek", "Mercimek Çorbası", "Kimyonlu, limonlu ev çorbası", "Çorba", 32, 330, 17, ["Tencere", "Blender"], ["Kırmızı mercimek", "Soğan", "Havuç", "Kimyon", "Limon"], ["Soğan ve havucu yumuşat.", "Mercimeği ekleyip pişir.", "Blenderdan geçirip limonla servis et."], 0),
+  makeRecipe("tr-TR", "tr-fasulye", "Zeytinyağlı Taze Fasulye", "Domatesli ve hafif", "Zeytinyağlı", 40, 290, 9, ["Tencere"], ["Taze fasulye", "Domates", "Soğan", "Zeytinyağı"], ["Soğanı zeytinyağında çevir.", "Fasulye ve domatesi ekle.", "Kısık ateşte yumuşat."], 2),
+  makeRecipe("tr-TR", "tr-bulgur", "Sebzeli Bulgur Pilavı", "Biber, domates ve yoğurtla", "Hızlı", 26, 410, 13, ["Tencere", "Tava"], ["Bulgur", "Domates", "Yeşil biber", "Yoğurt"], ["Sebzeleri sotele.", "Bulgur ve suyu ekle.", "Demlendirip yoğurtla sun."], 1),
+  makeRecipe("tr-TR", "tr-kofte", "Fırın Köfte ve Sebze", "Patates, kabak ve domatesle", "Akşam", 38, 540, 34, ["Fırın", "Air Fryer"], ["Köfte", "Patates", "Kabak", "Domates"], ["Sebzeleri tepsiye yay.", "Köfteleri baharatla.", "Kızarana kadar fırınla."], 3),
+  makeRecipe("en-GB", "en-shepherds-pie", "Vegetable Shepherd’s Pie", "Lentils, peas and a golden potato topping", "Comfort dinner", 42, 520, 23, ["Oven", "Large pot", "Potato masher"], ["Green lentils", "Potatoes", "Peas", "Carrots", "Cheddar"], ["Cook lentils with carrots and peas.", "Mash the potatoes until smooth.", "Layer and bake until golden."], 3),
+  makeRecipe("en-GB", "en-leek-soup", "Leek & Potato Soup", "A creamy weekday soup with oats", "Soup", 30, 345, 13, ["Large pot", "Blender"], ["Leeks", "Potatoes", "Oats", "Vegetable stock"], ["Soften leeks in a pot.", "Simmer with potato and stock.", "Blend until smooth."], 0),
+  makeRecipe("en-GB", "en-traybake", "Roasted Veg Tray Bake", "Root vegetables, beans and herbs", "Tray bake", 35, 430, 18, ["Oven", "Tray"], ["Carrots", "Parsnips", "Potatoes", "White beans"], ["Season vegetables with herbs.", "Roast until caramelised.", "Fold in warm beans."], 2),
+  makeRecipe("en-GB", "en-cod-peas", "Baked Cod with Peas", "Lemon potatoes and garden peas", "Dinner", 28, 505, 37, ["Oven", "Tray"], ["Cod", "Potatoes", "Peas", "Lemon"], ["Roast lemon potatoes.", "Add cod and peas.", "Bake until the fish flakes."], 1),
+  makeRecipe("de-DE", "de-linseneintopf", "Linseneintopf", "Herzhafter Linsentopf mit Wurzelgemüse", "Eintopf", 38, 445, 24, ["Großer Topf"], ["Linsen", "Kartoffeln", "Karotten", "Sellerie"], ["Gemüse klein schneiden.", "Linsen und Brühe zugeben.", "Sanft köcheln lassen."], 0),
+  makeRecipe("de-DE", "de-pilz-spaetzle", "Pilz-Spätzle", "Mit Kräutern und einer leichten Rahmsauce", "Pfannengericht", 25, 530, 20, ["Pfanne", "Großer Topf"], ["Spätzle", "Champignons", "Zwiebel", "Schnittlauch"], ["Spätzle kurz kochen.", "Pilze goldbraun braten.", "Mit Kräutern verbinden."], 1),
+  makeRecipe("de-DE", "de-ofengemuese", "Ofengemüse mit Kräuterquark", "Kartoffeln, Rote Bete und saisonales Gemüse", "Ofengericht", 36, 425, 19, ["Ofen", "Backblech"], ["Kartoffeln", "Rote Bete", "Karotten", "Quark"], ["Gemüse würzen.", "Auf dem Blech rösten.", "Mit Kräuterquark servieren."], 2),
+  makeRecipe("de-DE", "de-spargel-risotto", "Spargel-Risotto", "Cremiger Reis mit grünem Spargel", "Saisonal", 33, 485, 16, ["Großer Topf", "Pfanne"], ["Risottoreis", "Grüner Spargel", "Parmesan", "Zitrone"], ["Reis glasig dünsten.", "Brühe nach und nach einrühren.", "Spargel und Parmesan unterheben."], 3),
+  makeRecipe("es-ES", "es-garbanzos", "Espinacas con Garbanzos", "Garbanzos y espinacas con ajo y pimentón", "Legumbres", 24, 410, 19, ["Sartén amplia", "Olla"], ["Garbanzos", "Espinacas", "Ajo", "Pimentón"], ["Dora el ajo.", "Añade garbanzos y pimentón.", "Incorpora las espinacas."], 0),
+  makeRecipe("es-ES", "es-tortilla", "Tortilla de Patatas y Verduras", "Patata, calabacín y huevo en una sartén", "Sartén", 30, 470, 22, ["Sartén amplia"], ["Patatas", "Calabacín", "Huevos", "Cebolla"], ["Cocina patata y calabacín.", "Mezcla con huevo.", "Cuaja por ambos lados."], 1),
+  makeRecipe("es-ES", "es-paella", "Paella de Verduras", "Arroz con judías, pimiento y azafrán", "Arroz", 36, 465, 15, ["Sartén amplia"], ["Arroz", "Judías verdes", "Pimiento", "Azafrán"], ["Prepara un sofrito.", "Añade arroz y caldo.", "Cocina sin remover."], 3),
+  makeRecipe("es-ES", "es-gazpacho", "Gazpacho con Tostada", "Sopa fría de tomate con garbanzos crujientes", "Ligero", 18, 350, 14, ["Batidora", "Sartén"], ["Tomates", "Pepino", "Pimiento", "Garbanzos"], ["Tritura las verduras.", "Tuesta los garbanzos.", "Sirve frío."], 2),
+  makeRecipe("fr-FR", "fr-ratatouille", "Ratatouille Provençale", "Légumes mijotés à l’huile d’olive et aux herbes", "Légumes", 38, 360, 12, ["Casserole", "Poêle"], ["Aubergine", "Courgette", "Tomates", "Poivron"], ["Faire revenir les légumes.", "Ajouter tomates et herbes.", "Laisser mijoter."], 2),
+  makeRecipe("fr-FR", "fr-potage", "Potage Poireaux-Pommes de Terre", "Velouté simple et réconfortant", "Soupe", 30, 335, 13, ["Casserole", "Blender"], ["Poireaux", "Pommes de terre", "Bouillon", "Ciboulette"], ["Faire fondre les poireaux.", "Ajouter pommes de terre et bouillon.", "Mixer doucement."], 0),
+  makeRecipe("fr-FR", "fr-quiche", "Quiche aux Légumes", "Courgette, champignons et fromage", "Four", 40, 515, 25, ["Four", "Plat à gratin"], ["Pâte brisée", "Courgette", "Champignons", "Œufs"], ["Garnir la pâte.", "Ajouter les œufs et le fromage.", "Cuire jusqu’à dorure."], 1),
+  makeRecipe("fr-FR", "fr-lentilles", "Salade de Lentilles", "Carottes rôties et vinaigrette moutardée", "Léger", 27, 430, 22, ["Casserole", "Four"], ["Lentilles", "Carottes", "Moutarde", "Persil"], ["Cuire les lentilles.", "Rôtir les carottes.", "Mélanger avec la vinaigrette."], 3),
 ];
 
-export const categories = ["Tümü", "Hızlı & Dengeli", "Kahvaltı", "Akşam Yemeği", "Paylaşmalık"];
-
+export function getRecipesForLocale(locale?: CuisineLocale) { return recipes.filter((item) => item.cuisine === (locale ?? "tr-TR")); }
+export function getCategoriesForLocale(locale?: CuisineLocale) { const profile = getCuisineProfile(locale); return [profile.ui.all, ...Array.from(new Set(getRecipesForLocale(profile.code).map((item) => item.category)))]; }
+export const categories = getCategoriesForLocale("tr-TR");
 export const initialPantry = ["Nohut", "Yumurta", "Roka", "Yoğurt", "Limon", "Domates"];
-
-export const initialWeeklyPlan = [
-  { day: "Pzt", meal: "Akşam", recipeId: "yesil-enerji-kasesi" },
-  { day: "Sal", meal: "Öğle", recipeId: "firin-domatesli-yumurta" },
-  { day: "Çar", meal: "Akşam", recipeId: "akdeniz-somon-tabagi" },
-  { day: "Per", meal: "Akşam", recipeId: "akdeniz-mezze-tabagi" },
-];
-
-export function buildPersonalWeeklyPlan(input: { pantry: string[]; favoriteIngredients: string[]; goal: string; allergies: string[]; kitchenTools: string[] }) {
-  return buildPersonalWeekPlan(recipes, input);
-}
-
-export function getPersonalRecipeAlternative(input: { pantry: string[]; favoriteIngredients: string[]; goal: string; allergies: string[]; kitchenTools: string[] }, currentRecipeId: string, occupiedRecipeIds: string[]) {
-  return findPersonalMenuAlternative(recipes, input, currentRecipeId, occupiedRecipeIds);
-}
-
-export function getEquipmentAdvice(recipe: Recipe, kitchenTools: string[]) {
-  return getAdvice(recipe, kitchenTools);
-}
-
-export function buildGroceryList(recipeIds: string[]) {
-  const selectedRecipes = recipeIds
-    .map((id) => recipes.find((recipe) => recipe.id === id))
-    .filter((recipe): recipe is Recipe => Boolean(recipe));
-
-  return uniqueShoppingItems(selectedRecipes).map((name) => ({ name, checked: false }));
-}
-
-export function getRecipe(id?: string) {
-  return recipes.find((recipe) => recipe.id === id) ?? recipes[0];
-}
+export const initialWeeklyPlan = [{ day: "Pzt", meal: "Akşam", recipeId: "tr-mercimek" }, { day: "Sal", meal: "Öğle", recipeId: "tr-fasulye" }, { day: "Çar", meal: "Akşam", recipeId: "tr-bulgur" }, { day: "Per", meal: "Akşam", recipeId: "tr-kofte" }];
+export function buildPersonalWeeklyPlan(input: { pantry: string[]; favoriteIngredients: string[]; goal: string; allergies: string[]; kitchenTools: string[]; locale?: CuisineLocale }) { const profile = getCuisineProfile(input.locale); return buildPersonalWeekPlan(getRecipesForLocale(profile.code), input, { days: profile.days, meals: profile.meals }); }
+export function getPersonalRecipeAlternative(input: { pantry: string[]; favoriteIngredients: string[]; goal: string; allergies: string[]; kitchenTools: string[]; locale?: CuisineLocale }, currentRecipeId: string, occupiedRecipeIds: string[]) { return findPersonalMenuAlternative(getRecipesForLocale(input.locale), input, currentRecipeId, occupiedRecipeIds); }
+export function getEquipmentAdvice(recipe: Recipe, kitchenTools: string[]) { return getAdvice(recipe, kitchenTools); }
+export function buildGroceryList(recipeIds: string[]) { return uniqueShoppingItems(recipeIds.map((id) => recipes.find((item) => item.id === id)).filter((item): item is Recipe => Boolean(item))).map((name) => ({ name, checked: false })); }
+export function getRecipe(id?: string) { return recipes.find((item) => item.id === id) ?? getRecipesForLocale("tr-TR")[0]; }

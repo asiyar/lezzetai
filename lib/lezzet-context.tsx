@@ -2,11 +2,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type PropsWithChildren } from "react";
 
 import { buildGroceryList, buildPersonalWeeklyPlan, getPersonalRecipeAlternative, initialPantry, initialWeeklyPlan } from "@/lib/lezzet-data";
+import { defaultCuisineLocale, isCuisineLocale, type CuisineLocale } from "@/lib/cuisine-locale";
 import type { WearableActivity } from "@/lib/wearable-sync";
 
 type GroceryItem = { name: string; checked: boolean; updatedBy?: string; updatedAt?: string };
 type WeeklyMeal = { day: string; meal: string; recipeId: string };
-type Profile = { goal: string; people: number; calories: number; allergies: string[] };
+type Profile = { goal: string; people: number; calories: number; allergies: string[]; locale: CuisineLocale };
 type PantryMeta = { favorite: boolean; expiresInDays: number };
 type ScanHistoryItem = { id: string; ingredients: string[]; createdAt: string; recipePrompt: string };
 type FamilyMember = { id: string; name: string; color: string };
@@ -64,7 +65,7 @@ export function LezzetProvider({ children }: PropsWithChildren) {
   const [pantry, setPantry] = useState<string[]>(initialPantry);
   const [grocery, setGrocery] = useState<GroceryItem[]>(buildGroceryList(initialWeeklyPlan.map((item) => item.recipeId)));
   const [weeklyPlan, setWeeklyPlan] = useState<WeeklyMeal[]>(initialWeeklyPlan);
-  const [profile, setProfile] = useState<Profile>({ goal: "Dengeli beslenme", people: 2, calories: 1850, allergies: ["Fıstık"] });
+  const [profile, setProfile] = useState<Profile>({ goal: "Dengeli beslenme", people: 2, calories: 1850, allergies: ["Fıstık"], locale: defaultCuisineLocale });
   const [pantryMeta, setPantryMeta] = useState<Record<string, PantryMeta>>({ Roka: { favorite: true, expiresInDays: 1 }, Domates: { favorite: false, expiresInDays: 2 }, Yoğurt: { favorite: false, expiresInDays: 4 }, Limon: { favorite: true, expiresInDays: 6 } });
   const [scanHistory, setScanHistory] = useState<ScanHistoryItem[]>([]);
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([{ id: "deniz", name: "Deniz", color: "#1E4D3A" }, { id: "ayse", name: "Ayşe", color: "#B7652E" }]);
@@ -87,7 +88,7 @@ export function LezzetProvider({ children }: PropsWithChildren) {
         if (saved.pantry) setPantry(saved.pantry);
         if (saved.grocery) setGrocery(saved.grocery);
         if (saved.weeklyPlan) setWeeklyPlan(saved.weeklyPlan);
-        if (saved.profile) setProfile(saved.profile);
+        if (saved.profile) setProfile({ ...saved.profile, locale: isCuisineLocale(saved.profile.locale) ? saved.profile.locale : defaultCuisineLocale });
         if (saved.pantryMeta) setPantryMeta(saved.pantryMeta);
         if (saved.scanHistory) setScanHistory(saved.scanHistory);
         if (saved.familyMembers) setFamilyMembers(saved.familyMembers);
@@ -142,12 +143,12 @@ export function LezzetProvider({ children }: PropsWithChildren) {
   }, []);
 
   const createGroceryFromPlan = useCallback(() => setGrocery(buildGroceryList(weeklyPlan.map((item) => item.recipeId))), [weeklyPlan]);
-  const createPersonalWeeklyPlan = useCallback(() => setWeeklyPlan(buildPersonalWeeklyPlan({ pantry, favoriteIngredients: pantry.filter((item) => pantryMeta[item]?.favorite), goal: profile.goal, allergies: profile.allergies, kitchenTools })), [kitchenTools, pantry, pantryMeta, profile.allergies, profile.goal]);
+  const createPersonalWeeklyPlan = useCallback(() => setWeeklyPlan(buildPersonalWeeklyPlan({ pantry, favoriteIngredients: pantry.filter((item) => pantryMeta[item]?.favorite), goal: profile.goal, allergies: profile.allergies, kitchenTools, locale: profile.locale })), [kitchenTools, pantry, pantryMeta, profile.allergies, profile.goal, profile.locale]);
   const replaceWeeklyMeal = useCallback((day: string, currentRecipeId: string) => setWeeklyPlan((current) => {
-    const input = { pantry, favoriteIngredients: pantry.filter((item) => pantryMeta[item]?.favorite), goal: profile.goal, allergies: profile.allergies, kitchenTools };
+    const input = { pantry, favoriteIngredients: pantry.filter((item) => pantryMeta[item]?.favorite), goal: profile.goal, allergies: profile.allergies, kitchenTools, locale: profile.locale };
     const replacement = getPersonalRecipeAlternative(input, currentRecipeId, current.map((item) => item.recipeId));
     return current.map((item) => item.day === day && item.recipeId === currentRecipeId ? { ...item, recipeId: replacement } : item);
-  }), [kitchenTools, pantry, pantryMeta, profile.allergies, profile.goal]);
+  }), [kitchenTools, pantry, pantryMeta, profile.allergies, profile.goal, profile.locale]);
   const updateProfile = useCallback((patch: Partial<Profile>) => setProfile((current) => ({ ...current, ...patch })), []);
   const completeOnboarding = useCallback((nextProfile: Profile) => { setProfile(nextProfile); setOnboardingComplete(true); }, []);
 

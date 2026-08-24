@@ -5,6 +5,7 @@ import { buildPersonalWeekPlan, findPersonalMenuAlternative } from "../lib/perso
 import { getEquipmentAdvice } from "../lib/equipment-advice";
 import { getRecipeEstimate, scaleIngredientList } from "../lib/culinary-utils";
 import { getAdaptiveTargets } from "../lib/wearable-utils";
+import { getCuisineProfile } from "../lib/cuisine-locale";
 
 describe("LezzetAI haftalık planlama", () => {
   it("planlanan öğünlerde yinelenen malzemeleri tek alışveriş kalemine indirger", () => {
@@ -59,5 +60,27 @@ describe("LezzetAI haftalık planlama", () => {
 
   it("aktif enerji verisini günlük kalori ve makro hedefine ölçülü biçimde yansıtır", () => {
     expect(getAdaptiveTargets(1850, 400)).toEqual({ calories: 2050, adjustment: 200, protein: 128, carbs: 256, fat: 57 });
+  });
+
+  it("seçilen dil-bölge için kendi kiler ve ekipman profilini döndürür", () => {
+    const german = getCuisineProfile("de-DE");
+    const spanish = getCuisineProfile("es-ES");
+    expect(german.region).toBe("Deutschland");
+    expect(german.pantryHighlights).toContain("Kartoffeln");
+    expect(german.recommendedTools).toContain("Großer Topf");
+    expect(spanish.region).toBe("España");
+    expect(spanish.pantryHighlights).toContain("Garbanzos");
+  });
+
+  it("bölgesel otomatik planı seçilen dilin gün etiketleri ve tarifleriyle oluşturur", () => {
+    const german = getCuisineProfile("de-DE");
+    const regionalRecipes = [
+      { id: "de-linsen", title: "Linseneintopf", subtitle: "Kartoffeln", ingredients: ["Linsen"], tags: [], protein: 23, calories: 440, minutes: 30, tools: ["Großer Topf"], cuisine: "de-DE" },
+      { id: "tr-mercimek", title: "Mercimek Çorbası", subtitle: "Limonlu", ingredients: ["Mercimek"], tags: [], protein: 18, calories: 330, minutes: 30, tools: ["Tencere"], cuisine: "tr-TR" },
+    ];
+    const plan = buildPersonalWeekPlan(regionalRecipes, { pantry: [], favoriteIngredients: [], goal: "Ausgewogene Ernährung", allergies: [], kitchenTools: [], locale: "de-DE" }, { days: german.days, meals: german.meals });
+    expect(plan).toHaveLength(7);
+    expect(plan[0].day).toBe("Mo");
+    expect(plan.every((entry) => entry.recipeId.startsWith("de-"))).toBe(true);
   });
 });

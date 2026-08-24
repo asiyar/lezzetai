@@ -19,6 +19,7 @@ const MAPPING = {
   "chevron.left.forwardslash.chevron.right": "code",
   "chevron.right": "chevron-right",
   "lock.fill": "lock",
+  "globe": "public",
   "sparkles": "auto-awesome",
   "safari": "explore",
   "calendar": "calendar-month",

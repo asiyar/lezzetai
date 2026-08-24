@@ -37,6 +37,7 @@ function AppNavigator() {
     <Stack key={onboardingComplete ? "app" : "onboarding"} initialRouteName={onboardingComplete ? "(tabs)" : "onboarding"} screenOptions={{ headerShown: false }}>
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="cuisine-region" />
       <Stack.Screen name="privacy" />
       <Stack.Screen name="oauth/callback" />
     </Stack>

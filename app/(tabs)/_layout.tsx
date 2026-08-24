@@ -5,9 +5,13 @@ import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Platform } from "react-native";
 import { useColors } from "@/hooks/use-colors";
+import { useLezzet } from "@/lib/lezzet-context";
+import { getCuisineProfile } from "@/lib/cuisine-locale";
 
 export default function TabLayout() {
   const colors = useColors();
+  const { profile } = useLezzet();
+  const copy = getCuisineProfile(profile.locale).ui;
   const insets = useSafeAreaInsets();
   const bottomPadding = Platform.OS === "web" ? 12 : Math.max(insets.bottom, 8);
   const tabBarHeight = 56 + bottomPadding;
@@ -28,11 +32,11 @@ export default function TabLayout() {
         },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: "Bugün", tabBarIcon: ({ color }) => <IconSymbol size={24} name="house.fill" color={color} /> }} />
-      <Tabs.Screen name="discover" options={{ title: "Keşfet", tabBarIcon: ({ color }) => <IconSymbol size={24} name="safari" color={color} /> }} />
-      <Tabs.Screen name="chef" options={{ title: "AI Şef", tabBarIcon: ({ color }) => <IconSymbol size={25} name="sparkles" color={color} /> }} />
-      <Tabs.Screen name="plan" options={{ title: "Plan", tabBarIcon: ({ color }) => <IconSymbol size={24} name="calendar" color={color} /> }} />
-      <Tabs.Screen name="profile" options={{ title: "Profil", tabBarIcon: ({ color }) => <IconSymbol size={24} name="person.crop.circle" color={color} /> }} />
+      <Tabs.Screen name="index" options={{ title: copy.today, tabBarIcon: ({ color }) => <IconSymbol size={24} name="house.fill" color={color} /> }} />
+      <Tabs.Screen name="discover" options={{ title: copy.discover, tabBarIcon: ({ color }) => <IconSymbol size={24} name="safari" color={color} /> }} />
+      <Tabs.Screen name="chef" options={{ title: copy.chef, tabBarIcon: ({ color }) => <IconSymbol size={25} name="sparkles" color={color} /> }} />
+      <Tabs.Screen name="plan" options={{ title: copy.plan, tabBarIcon: ({ color }) => <IconSymbol size={24} name="calendar" color={color} /> }} />
+      <Tabs.Screen name="profile" options={{ title: copy.profile, tabBarIcon: ({ color }) => <IconSymbol size={24} name="person.crop.circle" color={color} /> }} />
     </Tabs>
   );
 }

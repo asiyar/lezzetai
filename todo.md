@@ -83,3 +83,7 @@
 - [ ] Gizlilik rotasını yayımlanmış, herkese açık URL ile destek ve veri silme iletişim bilgisine bağlamak
 - [ ] Apple App Store Connect ve Google Play Console listelemeleri, yaş/içerik, gizlilik ve sağlık beyanlarını tamamlamak
 - [ ] İmzalı iOS ve Android üretim paketlerini gerçek cihazlarda test ederek mağaza incelemesine göndermek
+- [x] Türkçe, İngilizce, Almanca, İspanyolca ve Fransızca için dil-bölge mutfak profillerini tanımlamak
+- [x] Seçilen dil-bölgeye göre tarif, malzeme, ekipman ve haftalık plan önerisini uyarlamak
+- [x] Uygulama içi dil seçimini kalıcılaştırmak ve temel arayüz metinlerini yerelleştirmek
+- [x] Bölgesel tarif ve planlama kurallarını birim testleriyle doğrulamak

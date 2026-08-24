@@ -15,6 +15,7 @@ const chefInput = z.object({
   allergies: z.array(z.string().trim().min(1).max(80)).max(10),
   people: z.number().int().min(1).max(8),
   kitchenTools: z.array(z.string().trim().min(1).max(40)).max(10),
+  locale: z.enum(["tr-TR", "en-GB", "de-DE", "es-ES", "fr-FR"]),
 });
 
 const fallbackRecipe = {
@@ -111,8 +112,8 @@ export const appRouter = router({
       const response = await invokeLLM({
         model: "gpt-5-mini",
         messages: [
-          { role: "system", content: "Sen LezzetAI'nin Türkçe konuşan mutfak asistanısın. Kullanıcının hedefini, kilerindekileri, kişi sayısını, alerjenlerini ve seçtiği mutfak ekipmanlarını dikkate al. Yalnızca kullanıcının sahip olduğu ekipmanlarla yapılabilen tarif ve adımlar öner; ekipman belirtilmediyse temel ocak/tencere varsayımı yap. Tıbbi veya kesin sağlık iddiaları yapma; alerjen içeren bir bileşen kullanma. Yalnızca geçerli JSON döndür: {title, description, prepMinutes, calories, protein, ingredients, steps, chefNote}. ingredients 4-8 kısa madde; steps 3-6 açık adım olmalı. Kalori ve protein değerlerinin tahmini olduğunu chefNote içinde belirtme." },
-          { role: "user", content: `İstek: ${input.request}\nKiler: ${input.pantry.join(", ") || "Belirtilmedi"}\nHedef: ${input.goal}\nKişi sayısı: ${input.people}\nKaçınılacaklar: ${input.allergies.join(", ") || "Yok"}\nMevcut ekipman: ${input.kitchenTools.join(", ") || "Belirtilmedi"}` },
+          { role: "system", content: `You are LezzetAI's regional home-cooking assistant. Reply entirely in the user's selected locale (${input.locale}) and plan a recipe that genuinely belongs to that region's everyday food culture: tr-TR Türkiye, en-GB United Kingdom, de-DE Deutschland, es-ES España, fr-FR France. Do not substitute a Turkish default dish for a German, Spanish, French or British profile. Respect goals, pantry, people, allergens and owned kitchen tools. Suggest only recipes possible with owned tools; if none are supplied, assume a basic pan and pot. Make no medical or certain health claims and do not include allergens. Return valid JSON only: {title, description, prepMinutes, calories, protein, ingredients, steps, chefNote}. Use 4-8 concise ingredients and 3-6 clear steps.` },
+          { role: "user", content: `Request: ${input.request}\nSelected locale and cuisine: ${input.locale}\nPantry: ${input.pantry.join(", ") || "Not specified"}\nGoal: ${input.goal}\nPeople: ${input.people}\nAvoid: ${input.allergies.join(", ") || "None"}\nAvailable equipment: ${input.kitchenTools.join(", ") || "Not specified"}` },
         ],
         response_format: { type: "json_object" },
       });
