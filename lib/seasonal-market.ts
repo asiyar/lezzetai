@@ -3,6 +3,28 @@ import type { CuisineLocale } from "./cuisine-locale";
 export type Season = "spring" | "summer" | "autumn" | "winter";
 export type DietaryTag = "vegan" | "vegetarian" | "gluten-free";
 export type DietaryPreference = DietaryTag;
+export type MarketCategoryKey = "produce" | "pantry" | "dairy" | "protein" | "bakery";
+
+export const allergenOptions = ["Süt", "Yumurta", "Balık", "Kabuklu deniz ürünü", "Yer fıstığı", "Sert kabuklu yemiş", "Soya", "Susam", "Buğday / gluten"] as const;
+
+const allergenAliases: Record<string, string[]> = {
+  "Süt": ["süt", "yoğurt", "yogurt", "milk", "cream", "cheddar", "parmesan", "quark", "fromage", "lait", "butter", "tereyağı", "peynir", "cheese"],
+  "Yumurta": ["yumurta", "huevo", "huevos", "egg", "oeuf", "œuf", "ei"],
+  "Balık": ["balık", "somon", "salmon", "cod", "fish", "poisson", "pescado"],
+  "Kabuklu deniz ürünü": ["karides", "shrimp", "prawn", "shellfish", "crab", "mussel", "crevette", "marisco"],
+  "Yer fıstığı": ["fıstık", "peanut", "cacahuete", "erdnuss", "arachide"],
+  "Sert kabuklu yemiş": ["badem", "ceviz", "fındık", "almond", "walnut", "hazelnut", "mandel", "noix"],
+  "Soya": ["soya", "soy"],
+  "Susam": ["susam", "sesame", "sésame"],
+  "Buğday / gluten": ["buğday", "gluten", "bulgur", "ekmek", "bread", "brot", "pasta", "spätzle", "pâte", "oats", "yulaf"],
+};
+
+export function getDirectAllergenMatches(ingredients: string[], selectedAllergies: string[]) {
+  const ingredientText = ingredients.join(" ").toLocaleLowerCase("tr-TR");
+  return selectedAllergies.filter((allergen) => (allergenAliases[allergen] ?? [allergen.toLocaleLowerCase("tr-TR")]).some((alias) => ingredientText.includes(alias)));
+}
+
+export const crossContactChecklist = ["Çalışma yüzeyini ve ekipmanı sıcak, sabunlu suyla temizle.", "Alerjen içermeyen öğünü önce hazırla ve ayrı servis aracı kullan.", "Paketli malzemelerin etiketini ve ‘içerebilir’ uyarılarını kontrol et."];
 
 export const dietaryOptions: { id: DietaryTag; labels: Record<CuisineLocale, string> }[] = [
   { id: "vegan", labels: { "tr-TR": "Vegan", "en-GB": "Vegan", "de-DE": "Vegan", "es-ES": "Vegano", "fr-FR": "Végan" } },
@@ -83,13 +105,33 @@ export function toLocalMarketEstimate(value: number, locale: CuisineLocale) {
   return Math.max(1, Math.round(value * multiplier[locale]));
 }
 
-const categoryLabels: Record<CuisineLocale, string[]> = {
-  "tr-TR": ["Sebze & meyve", "Bakliyat & temel gıda", "Süt ürünleri", "Et & balık", "Fırın & ekmek"],
-  "en-GB": ["Produce", "Pantry", "Dairy", "Protein", "Bakery"],
-  "de-DE": ["Obst & Gemüse", "Vorrat", "Milchprodukte", "Protein", "Bäckerei"],
-  "es-ES": ["Fruta y verdura", "Despensa", "Lácteos", "Proteína", "Panadería"],
-  "fr-FR": ["Fruits et légumes", "Épicerie", "Produits laitiers", "Protéines", "Boulangerie"],
+const categoryLabels: Record<CuisineLocale, Record<MarketCategoryKey, string>> = {
+  "tr-TR": { produce: "Sebze & meyve", pantry: "Bakliyat & temel gıda", dairy: "Süt ürünleri", protein: "Et & balık", bakery: "Fırın & ekmek" },
+  "en-GB": { produce: "Produce", pantry: "Pantry", dairy: "Dairy", protein: "Protein", bakery: "Bakery" },
+  "de-DE": { produce: "Obst & Gemüse", pantry: "Vorrat", dairy: "Milchprodukte", protein: "Protein", bakery: "Bäckerei" },
+  "es-ES": { produce: "Fruta y verdura", pantry: "Despensa", dairy: "Lácteos", protein: "Proteína", bakery: "Panadería" },
+  "fr-FR": { produce: "Fruits et légumes", pantry: "Épicerie", dairy: "Produits laitiers", protein: "Protéines", bakery: "Boulangerie" },
 };
+
+const defaultMarketPrices: Record<CuisineLocale, Record<MarketCategoryKey, number>> = {
+  "tr-TR": { produce: 22, pantry: 18, dairy: 34, protein: 48, bakery: 16 },
+  "en-GB": { produce: 2, pantry: 2, dairy: 3, protein: 5, bakery: 2 },
+  "de-DE": { produce: 2, pantry: 2, dairy: 3, protein: 5, bakery: 2 },
+  "es-ES": { produce: 2, pantry: 2, dairy: 3, protein: 5, bakery: 2 },
+  "fr-FR": { produce: 2, pantry: 2, dairy: 3, protein: 5, bakery: 2 },
+};
+
+export function getMarketCategoryKey(item: string): MarketCategoryKey {
+  const value = item.toLocaleLowerCase("tr-TR");
+  if (produceWords.some((word) => value.includes(word))) return "produce";
+  if (dairyWords.some((word) => value.includes(word))) return "dairy";
+  if (proteinWords.some((word) => value.includes(word))) return "protein";
+  if (bakeryWords.some((word) => value.includes(word))) return "bakery";
+  return "pantry";
+}
+
+export function getMarketCategoryLabel(key: MarketCategoryKey, locale: CuisineLocale) { return categoryLabels[locale][key]; }
+export function getDefaultMarketPrices(locale: CuisineLocale) { return defaultMarketPrices[locale]; }
 
 const produceWords = ["domates", "tomat", "tomate", "carrot", "havuç", "kabak", "courget", "zucchini", "patates", "kartoff", "potato", "pırasa", "leek", "poireau", "lauch", "ıspanak", "spinach", "espinaca", "épinard", "biber", "pepper", "pimiento", "poivron", "mantar", "mushroom", "champignon", "seta", "lenteja", "mercimek", "linsen", "lentil"];
 const dairyWords = ["yoğurt", "yoghurt", "joghur", "fromage", "cheddar", "quark", "parmesan", "cream", "süt", "milk", "lait"];
@@ -97,12 +139,7 @@ const proteinWords = ["köfte", "cod", "somon", "salmon", "fish", "balık", "pes
 const bakeryWords = ["ekmek", "bread", "brot", "pan", "pâte", "spätzle", "bulgur", "rice", "reis", "arroz"];
 
 export function getMarketCategory(item: string, locale: CuisineLocale) {
-  const value = item.toLocaleLowerCase(locale);
-  if (produceWords.some((word) => value.includes(word))) return categoryLabels[locale][0];
-  if (dairyWords.some((word) => value.includes(word))) return categoryLabels[locale][2];
-  if (proteinWords.some((word) => value.includes(word))) return categoryLabels[locale][3];
-  if (bakeryWords.some((word) => value.includes(word))) return categoryLabels[locale][4];
-  return categoryLabels[locale][1];
+  return getMarketCategoryLabel(getMarketCategoryKey(item), locale);
 }
 
 export function recipeMatchesDiet(tags: DietaryTag[], selected: DietaryPreference[]) {

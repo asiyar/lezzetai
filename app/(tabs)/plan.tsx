@@ -4,19 +4,19 @@ import { router } from "expo-router";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { LocalizedText as Text } from "@/components/localized-text";
 import { ScreenContainer } from "@/components/screen-container";
-import { getRecipe } from "@/lib/lezzet-data";
+import { buildGroceryList, getRecipe } from "@/lib/lezzet-data";
 import { useLezzet } from "@/lib/lezzet-context";
 import { MotionReveal } from "@/components/motion-reveal";
 import { getCuisineProfile } from "@/lib/cuisine-locale";
-import { formatLocalCurrency, getCurrentSeason, getSeasonName, getSeasonalPackage, toLocalMarketEstimate } from "@/lib/seasonal-market";
+import { formatLocalCurrency, getCurrentSeason, getMarketCategoryKey, getSeasonName, getSeasonalPackage, toLocalMarketEstimate } from "@/lib/seasonal-market";
 
 export default function PlanScreen() {
-  const { weeklyPlan, createGroceryFromPlan, createPersonalWeeklyPlan, replaceWeeklyMeal, profile, pantry, pantryMeta, weeklyBudget, setWeeklyBudget, familyProfiles } = useLezzet();
+  const { weeklyPlan, createGroceryFromPlan, createPersonalWeeklyPlan, replaceWeeklyMeal, profile, pantry, pantryMeta, weeklyBudget, setWeeklyBudget, familyProfiles, marketPrices } = useLezzet();
   const cuisine = getCuisineProfile(profile.locale);
   const season = getCurrentSeason();
   const seasonalPackage = getSeasonalPackage(profile.locale, season);
   const days = cuisine.days;
-  const estimate = toLocalMarketEstimate(weeklyPlan.reduce((sum, item) => sum + getRecipe(item.recipeId).estimatedCost * (profile.people / 2), 0), profile.locale);
+  const estimate = buildGroceryList(weeklyPlan.map((item) => item.recipeId)).reduce((sum, item) => sum + marketPrices[profile.locale][getMarketCategoryKey(item.name)], 0);
   const urgentPantry = pantry.filter((item) => (pantryMeta[item]?.expiresInDays ?? 7) <= 2);
 
   return <ScreenContainer className="flex-1" containerClassName="bg-background"><ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>

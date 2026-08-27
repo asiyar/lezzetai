@@ -93,3 +93,9 @@
 - [x] Kalan uygulama ekranlarını seçili dile göre yerelleştirmek
 - [x] Ülkeye özgü para birimi, fiyat biçimi ve market kategorilerini eklemek
 - [x] Mevsim, bölge, diyet ve yerel alışveriş kurallarını test etmek
+- [x] Tarif ayrıntılarında profil alerjenleri ve çapraz bulaşma riski için görünür güvenlik uyarıları eklemek
+- [x] Kullanıcıların alerjen tercihlerini profilden ekleyip güncellemesini kolaylaştırmak
+- [x] Seçilen bölge için manuel fiyat girdilerini kalıcı olarak kaydeden fiyat özelleştirme ekranı eklemek
+- [x] Yerel fiyatları alışveriş özeti ve haftalık plan tahminlerinde kullanmak
+- [x] Her bölge ve mevsim için tarif kataloğunu genişletip mevsimsel favoriler bölümünü eklemek
+- [x] Alerjen, fiyat ve mevsimsel öneri akışlarını birim testleriyle doğrulamak

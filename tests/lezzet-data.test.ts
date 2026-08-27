@@ -6,7 +6,7 @@ import { getEquipmentAdvice } from "../lib/equipment-advice";
 import { getRecipeEstimate, scaleIngredientList } from "../lib/culinary-utils";
 import { getAdaptiveTargets } from "../lib/wearable-utils";
 import { getCuisineProfile } from "../lib/cuisine-locale";
-import { formatLocalCurrency, getCurrentSeason, getMarketCategory, getSeasonalPackage, recipeMatchesDiet } from "../lib/seasonal-market";
+import { formatLocalCurrency, getCurrentSeason, getDefaultMarketPrices, getDirectAllergenMatches, getMarketCategory, getMarketCategoryKey, getSeasonalPackage, recipeMatchesDiet } from "../lib/seasonal-market";
 
 describe("LezzetAI haftalık planlama", () => {
   it("planlanan öğünlerde yinelenen malzemeleri tek alışveriş kalemine indirger", () => {
@@ -103,5 +103,16 @@ describe("LezzetAI haftalık planlama", () => {
     expect(getMarketCategory("Cheddar", "en-GB")).toBe("Dairy");
     expect(formatLocalCurrency(12, "en-GB")).toContain("£");
     expect(formatLocalCurrency(12, "de-DE")).toContain("€");
+  });
+
+  it("profil alerjenlerini tarif malzemelerindeki eş anlamlılarla tespit eder", () => {
+    const matches = getDirectAllergenMatches(["Cheddar", "Yulaf", "Domates"], ["Süt", "Buğday / gluten", "Balık"]);
+    expect(matches).toEqual(["Süt", "Buğday / gluten"]);
+  });
+
+  it("kaydedilebilir yerel fiyat modelinde her ürün reyon anahtarına ayrılır", () => {
+    expect(getMarketCategoryKey("Somon")).toBe("protein");
+    expect(getMarketCategoryKey("Pırasa")).toBe("produce");
+    expect(getDefaultMarketPrices("tr-TR").protein).toBeGreaterThan(getDefaultMarketPrices("tr-TR").bakery);
   });
 });

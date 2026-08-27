@@ -8,10 +8,10 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useLezzet } from "@/lib/lezzet-context";
 import { buildShoppingShareMessage } from "@/lib/meal-planning";
 import { trpc } from "@/lib/trpc";
-import { formatLocalCurrency, getMarketCategory, toLocalMarketEstimate } from "@/lib/seasonal-market";
+import { formatLocalCurrency, getMarketCategoryKey, getMarketCategoryLabel } from "@/lib/seasonal-market";
 
 export default function ShoppingListScreen() {
-  const { grocery, familyMembers, addFamilyMember, toggleGrocery, sharedListInviteCode, setSharedListInviteCode, profile } = useLezzet();
+  const { grocery, familyMembers, addFamilyMember, toggleGrocery, sharedListInviteCode, setSharedListInviteCode, profile, marketPrices } = useLezzet();
   const [shareTitle, setShareTitle] = useState("Aile alışveriş listesi");
   const [memberName, setMemberName] = useState("");
   const [joinCode, setJoinCode] = useState("");
@@ -22,8 +22,9 @@ export default function ShoppingListScreen() {
   const displayItems = sharedQuery.data?.items ?? grocery;
   const completed = displayItems.filter((item) => item.checked).length;
   const marketSummary = displayItems.reduce<Record<string, { count: number; cost: number }>>((summary, item) => {
-    const category = getMarketCategory(item.name, profile.locale);
-    const cost = toLocalMarketEstimate(24, profile.locale);
+    const categoryKey = getMarketCategoryKey(item.name);
+    const category = getMarketCategoryLabel(categoryKey, profile.locale);
+    const cost = marketPrices[profile.locale][categoryKey];
     summary[category] = { count: (summary[category]?.count ?? 0) + 1, cost: (summary[category]?.cost ?? 0) + cost };
     return summary;
   }, {});
