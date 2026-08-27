@@ -139,3 +139,7 @@
 - [x] Eğitimli onboarding akışını test edip sürüm kaydına almak
 - [x] Eğitim sonunda seçili bölgeye uygun örnek kiler malzemelerini isteğe bağlı sunmak
 - [x] Örnek kilerle devam etme ve boş kilerle devam etme akışlarını test edip sürüm kaydına almak
+- [x] Profilde mevcut kileri tamamen sıfırlama denetimi eklemek
+- [x] Profilde seçili bölgenin örnek kiler ürünlerini yeniden yükleme denetimi eklemek
+- [x] Örnek kiler kurulunca kullanıcı tercihleriyle otomatik ilk hafta planı oluşturmak
+- [x] Kiler yönetimi ve ilk hafta planı akışlarını test edip sürüm kaydına almak
