@@ -134,3 +134,6 @@
 - [x] Dil-bölge seçiminin tarif, haftalık plan, kiler fikirleri ve AI Şef üzerindeki etkisini uçtan uca denetlemek
 - [x] Dil seçildiğinde kalan sabit metinleri ve bölgesel içerik bağlarını düzeltmek
 - [x] Beş dil-bölge senaryosunu birim testlerle doğrulayıp sürüm kaydına almak
+- [x] İlk girişte uygulama özelliklerini adım adım açıklayan eğitim akışı eklemek
+- [x] Onboarding başlangıcında dil ve mutfak bölgesi seçimi eklemek
+- [x] Eğitimli onboarding akışını test edip sürüm kaydına almak
