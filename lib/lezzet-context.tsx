@@ -72,7 +72,7 @@ type LezzetContextValue = {
   applyPantryWeeklyIdeas: (recipeIds: string[]) => void;
   replaceWeeklyMeal: (day: string, currentRecipeId: string) => void;
   updateProfile: (patch: Partial<Profile>) => void;
-  completeOnboarding: (profile: Profile) => void;
+  completeOnboarding: (profile: Profile, samplePantry?: string[]) => void;
 };
 
 const STORAGE_KEY = "lezzetai:state:v1";
@@ -223,7 +223,13 @@ export function LezzetProvider({ children }: PropsWithChildren) {
     return current.map((item) => item.day === day && item.recipeId === currentRecipeId ? { ...item, recipeId: replacement } : item);
   }), [kitchenTools, pantry, pantryMeta, profile.allergies, profile.dietaryPreferences, profile.goal, profile.locale]);
   const updateProfile = useCallback((patch: Partial<Profile>) => setProfile((current) => ({ ...current, ...patch })), []);
-  const completeOnboarding = useCallback((nextProfile: Profile) => { setProfile(nextProfile); setOnboardingComplete(true); }, []);
+  const completeOnboarding = useCallback((nextProfile: Profile, samplePantry: string[] = []) => {
+    const cleanPantry = Array.from(new Set(samplePantry.map((item) => item.trim()).filter(Boolean))).slice(0, 12);
+    setProfile(nextProfile);
+    setPantry(cleanPantry);
+    setPantryMeta(Object.fromEntries(cleanPantry.map((name) => [name, { ...defaultPantryStockMeta, quantity: 1, unit: "adet" as const }])));
+    setOnboardingComplete(true);
+  }, []);
 
   const value = useMemo(() => ({ favorites, pantry, pantryMeta, scanHistory, familyMembers, familyProfiles, recipeFeedback, journalEntries, wearableActivity, weeklyBudget, marketPrices, receiptPurchases, kitchenTools, sharedListInviteCode, grocery, weeklyPlan, profile, onboardingComplete, hydrated, toggleFavorite, addPantryItem, addPantryItems, removePantryItem, toggleFavoriteIngredient, setExpiryPriority, setExpiryDate, updatePantryStock, consumeRecipeFromPantry, recordScan, removeScan, addFamilyMember, addFamilyProfile, setRecipeFeedback, addJournalEntry, setWearableActivity, setWeeklyBudget, updateMarketPrice, recordReceiptPurchases, setSharedListInviteCode, toggleKitchenTool, toggleGrocery, addRecipeToPlan, createGroceryFromPlan, addLowStockToGrocery, createPersonalWeeklyPlan, applyPantryWeeklyIdeas, replaceWeeklyMeal, updateProfile, completeOnboarding }), [addFamilyMember, addFamilyProfile, addJournalEntry, addLowStockToGrocery, addPantryItem, addPantryItems, addRecipeToPlan, applyPantryWeeklyIdeas, completeOnboarding, consumeRecipeFromPantry, createGroceryFromPlan, createPersonalWeeklyPlan, familyMembers, familyProfiles, favorites, grocery, hydrated, journalEntries, kitchenTools, marketPrices, onboardingComplete, pantry, pantryMeta, profile, receiptPurchases, recordReceiptPurchases, recipeFeedback, recordScan, removePantryItem, removeScan, replaceWeeklyMeal, setExpiryDate, setExpiryPriority, setRecipeFeedback, setSharedListInviteCode, setWearableActivity, toggleFavorite, toggleFavoriteIngredient, toggleGrocery, toggleKitchenTool, updateMarketPrice, updatePantryStock, updateProfile, wearableActivity, weeklyBudget, weeklyPlan]);
 

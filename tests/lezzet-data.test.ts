@@ -15,6 +15,7 @@ import { normalizeBarcodeInput } from "../lib/barcode";
 import { buildPantryWeekIdeas } from "../lib/pantry-weekly-ideas";
 import { getPantryWeeklyCopy } from "../lib/pantry-weekly-copy";
 import { getOnboardingCopy } from "../lib/onboarding-copy";
+import { getOnboardingSampleCopy } from "../lib/onboarding-sample-copy";
 
 describe("LezzetAI haftalık planlama", () => {
   it("planlanan öğünlerde yinelenen malzemeleri tek alışveriş kalemine indirger", () => {
@@ -225,6 +226,15 @@ describe("LezzetAI haftalık planlama", () => {
       expect(copy.guides).toHaveLength(3);
       expect(copy.goals).toHaveLength(4);
       expect(copy.allergies).toHaveLength(6);
+    });
+  });
+
+  it("örnek kiler başlangıcını her dil-bölgede isteğe bağlı ve anlaşılır biçimde sunar", () => {
+    (["tr-TR", "en-GB", "de-DE", "es-ES", "fr-FR"] as const).forEach((locale) => {
+      const copy = getOnboardingSampleCopy(locale);
+      expect(copy.addTitle.length).toBeGreaterThan(4);
+      expect(copy.emptyTitle.length).toBeGreaterThan(4);
+      expect(copy.addTitle).not.toBe(copy.emptyTitle);
     });
   });
 });

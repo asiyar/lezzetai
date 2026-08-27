@@ -137,3 +137,5 @@
 - [x] İlk girişte uygulama özelliklerini adım adım açıklayan eğitim akışı eklemek
 - [x] Onboarding başlangıcında dil ve mutfak bölgesi seçimi eklemek
 - [x] Eğitimli onboarding akışını test edip sürüm kaydına almak
+- [x] Eğitim sonunda seçili bölgeye uygun örnek kiler malzemelerini isteğe bağlı sunmak
+- [x] Örnek kilerle devam etme ve boş kilerle devam etme akışlarını test edip sürüm kaydına almak
