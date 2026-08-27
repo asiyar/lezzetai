@@ -8,6 +8,7 @@ import { publicProcedure, router } from "./_core/trpc";
 import { storagePut } from "./storage";
 import * as db from "./db";
 import { kitchenToolNames } from "../lib/kitchen-tools";
+import { transcribeAudio } from "./_core/voiceTranscription";
 
 const chefInput = z.object({
   request: z.string().trim().min(3).max(800),
@@ -36,6 +37,12 @@ const scanInput = z.object({
   mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
 });
 
+const voiceInput = z.object({
+  audioBase64: z.string().min(100).max(8_000_000),
+  mimeType: z.enum(["audio/webm", "audio/m4a", "audio/mp4", "audio/wav", "audio/mpeg"]),
+  language: z.enum(["tr", "en", "de", "es", "fr"]),
+});
+
 const sharedListInput = z.object({
   inviteCode: z.string().trim().min(1).max(64).optional(),
   title: z.string().trim().min(1).max(120),
@@ -62,7 +69,7 @@ function normalizeEquipmentScan(content: string | null | undefined) {
   } catch { return fallbackEquipmentScan; }
 }
 
-function normalizeScan(content: string | null | undefined) {
+function normalizeScan(content: string | null | undefined, limit = 12) {
   if (!content) return fallbackScan;
   try {
     const parsed = JSON.parse(content) as Partial<typeof fallbackScan>;
@@ -78,7 +85,7 @@ function normalizeScan(content: string | null | undefined) {
         quantityConfidence: (["Yüksek", "Orta", "Düşük"] as const).includes(item.quantityConfidence as "Yüksek" | "Orta" | "Düşük") ? item.quantityConfidence as "Yüksek" | "Orta" | "Düşük" : "Düşük",
       }))
       .filter((item) => item.name.length > 0)
-      .slice(0, 12);
+      .slice(0, limit);
     return {
       ingredients: ingredients.length ? ingredients : fallbackScan.ingredients,
       suggestedPrompt: typeof parsed.suggestedPrompt === "string" && parsed.suggestedPrompt.trim() ? parsed.suggestedPrompt.trim().slice(0, 360) : fallbackScan.suggestedPrompt,
@@ -139,6 +146,21 @@ export const appRouter = router({
       });
       return normalizeScan(response.choices[0]?.message?.content as string | null | undefined);
     }),
+    scanReceipt: publicProcedure.input(scanInput).mutation(async ({ input }) => {
+      const imageBytes = Buffer.from(input.imageBase64, "base64");
+      if (imageBytes.length < 100 || imageBytes.length > 5_000_000) throw new Error("Fiş fotoğrafı desteklenen boyut sınırının dışında.");
+      const extension = input.mimeType === "image/png" ? "png" : input.mimeType === "image/webp" ? "webp" : "jpg";
+      const upload = await storagePut(`receipt-scans/receipt.${extension}`, imageBytes, input.mimeType);
+      const response = await invokeLLM({
+        model: "gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: "Sen LezzetAI'nin market fişi tanıma yardımcısısın. Fiş fotoğrafındaki yalnızca açıkça okunabilen tüketilebilir gıda ve içecek ürünlerini Türkçe listele. Fiyat, vergi, indirim, poşet, depozito, kart numarası, müşteri bilgisi, barkod ve ürün kodlarını yok say. Ürün miktarı/sayısı satırda açıkça görünmüyorsa quantity=1, unit='adet', quantityConfidence='Düşük' kullan. Görünmeyen ürünleri uydurma. Sadece geçerli JSON döndür: {ingredients:[{name,category,confidence,quantity,unit,quantityConfidence}],suggestedPrompt,safetyNote}. confidence yalnızca 'Yüksek' veya 'Orta'; unit yalnızca 'adet', 'g', 'ml' veya 'paket'; quantityConfidence yalnızca 'Yüksek', 'Orta' veya 'Düşük' olabilir. En çok 40 ürün döndür. safetyNote, kullanıcının listeyi ve miktarları kilerine eklemeden önce doğrulaması gerektiğini söylesin." },
+          { role: "user", content: [{ type: "text", text: "Bu market fişindeki gıda ürünlerini ve varsa miktarlarını topluca tanı. Sonuç kullanıcı onayıyla kilere eklenecek." }, { type: "image_url", image_url: { url: upload.url, detail: "high" } }] },
+        ],
+        response_format: { type: "json_object" },
+      });
+      return normalizeScan(response.choices[0]?.message?.content as string | null | undefined, 40);
+    }),
     scanEquipment: publicProcedure.input(scanInput).mutation(async ({ input }) => {
       const imageBytes = Buffer.from(input.imageBase64, "base64");
       if (imageBytes.length < 100 || imageBytes.length > 5_000_000) throw new Error("Fotoğraf boyutu desteklenen sınırın dışında.");
@@ -159,6 +181,20 @@ export const appRouter = router({
     bootstrap: publicProcedure.input(sharedListInput).mutation(({ input }) => db.getOrCreateFamilyList(input)),
     get: publicProcedure.input(z.object({ inviteCode: z.string().trim().min(1).max(64) })).query(({ input }) => db.getFamilyListByCode(input.inviteCode)),
     updateItem: publicProcedure.input(z.object({ inviteCode: z.string().trim().min(1).max(64), name: z.string().trim().min(1).max(180), checked: z.boolean(), updatedBy: z.string().trim().min(1).max(80) })).mutation(({ input }) => db.updateFamilyListItem(input)),
+  }),
+  voice: router({
+    transcribe: publicProcedure.input(voiceInput).mutation(async ({ input, ctx }) => {
+      const audioBytes = Buffer.from(input.audioBase64, "base64");
+      if (audioBytes.length < 100 || audioBytes.length > 6_000_000) throw new Error("Ses kaydı desteklenen boyut sınırının dışında.");
+      const extension = input.mimeType === "audio/webm" ? "webm" : input.mimeType === "audio/wav" ? "wav" : input.mimeType === "audio/mpeg" ? "mp3" : "m4a";
+      const upload = await storagePut(`voice-search/recording.${extension}`, audioBytes, input.mimeType);
+      const host = ctx.req.headers.host;
+      if (!host) throw new Error("Ses kaydı adresi oluşturulamadı.");
+      const protocol = ctx.req.headers["x-forwarded-proto"] === "https" ? "https" : ctx.req.protocol;
+      const result = await transcribeAudio({ audioUrl: `${protocol}://${host}${upload.url}`, language: input.language, prompt: "LezzetAI için malzeme, tarif veya alışveriş aramasını yazıya çevir." });
+      if ("error" in result) throw new Error(result.error);
+      return { text: result.text.trim().slice(0, 500), language: result.language };
+    }),
   }),
 });
 

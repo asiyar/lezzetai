@@ -109,3 +109,11 @@
 - [x] Düşük stok ve sık kullanılan ürün uyarılarını kilerde ve bildirimlerde göstermek
 - [x] Pişirilen tarifin kullanılan malzemelerini kullanıcı onayıyla kilerden düşmek
 - [x] Yeni ekipman, tarif, AI yönlendirme ve kiler akışlarını birim testleriyle doğrulamak
+- [x] Kiler ürünlerine gerçek son kullanma tarihi ekleme ve düzenleme alanı eklemek
+- [x] Son kullanması yaklaşan malzemeleri israf önleyici AI tarif önerilerinde önceliklendirmek
+- [x] Market fişi fotoğrafından tüm ürünleri ve yaklaşık miktarlarını tanıyan toplu tarama akışı eklemek
+- [x] Fişten tanınan ürünleri kullanıcı onayıyla tek seferde kilere kaydetmek
+- [x] Azalan ve biten kiler ürünlerini akıllı alışveriş listesine otomatik aktarmak
+- [x] Akıllı alışveriş listesini tek dokunuşla paylaşan ayrı ekran eklemek
+- [x] Arama ve malzeme metin girişlerine izinli sesli dikte denetimleri eklemek
+- [x] Son kullanma, fiş, alışveriş otomasyonu ve sesli giriş akışlarını test etmek

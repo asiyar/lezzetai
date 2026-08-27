@@ -3,6 +3,7 @@ export type StockUnit = "adet" | "g" | "ml" | "paket";
 export type PantryStockMeta = {
   favorite: boolean;
   expiresInDays: number;
+  expiresOn?: string;
   quantity: number;
   unit: StockUnit;
   lowStockThreshold: number;
@@ -12,6 +13,27 @@ export type PantryStockMeta = {
 export type RecipeLike = { id: string; ingredients: string[] };
 
 export const defaultPantryStockMeta: PantryStockMeta = { favorite: false, expiresInDays: 5, quantity: 1, unit: "adet", lowStockThreshold: 1, uses: 0 };
+
+export function getDaysUntilDate(isoDate: string, now = new Date()) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return null;
+  const target = new Date(`${isoDate}T12:00:00`);
+  if (Number.isNaN(target.getTime())) return null;
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12);
+  return Math.ceil((target.getTime() - today.getTime()) / 86_400_000);
+}
+
+export function getEffectiveExpiryDays(meta: PantryStockMeta | undefined, now = new Date()) {
+  const dateDays = meta?.expiresOn ? getDaysUntilDate(meta.expiresOn, now) : null;
+  return dateDays ?? meta?.expiresInDays ?? defaultPantryStockMeta.expiresInDays;
+}
+
+export function getExpiringPantryItems(pantry: string[], meta: Record<string, PantryStockMeta>, days = 3, now = new Date()) {
+  return pantry.filter((item) => getEffectiveExpiryDays(meta[item], now) <= days).sort((a, b) => getEffectiveExpiryDays(meta[a], now) - getEffectiveExpiryDays(meta[b], now));
+}
+
+export function getLowStockShoppingSeeds(pantry: string[], meta: Record<string, PantryStockMeta>) {
+  return pantry.filter((item) => (meta[item]?.quantity ?? 0) <= (meta[item]?.lowStockThreshold ?? defaultPantryStockMeta.lowStockThreshold));
+}
 
 export function normalizeFoodName(value: string) {
   return value.toLocaleLowerCase("tr-TR").replace(/[ıİ]/g, "i").replace(/[^a-z0-9çğöşüéàèêîôûñ]/gi, " ").trim();

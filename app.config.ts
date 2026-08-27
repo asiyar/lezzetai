@@ -56,7 +56,7 @@ const config: ExpoConfig = {
       }
   },
   android: {
-    blockedPermissions: ["android.permission.RECORD_AUDIO", "android.permission.SYSTEM_ALERT_WINDOW"],
+    blockedPermissions: ["android.permission.SYSTEM_ALERT_WINDOW"],
     adaptiveIcon: {
       backgroundColor: "#E6F4FE",
       foregroundImage: "./assets/images/android-icon-foreground.png",
@@ -91,6 +91,12 @@ const config: ExpoConfig = {
     "expo-router",
     "expo-font",
     "expo-web-browser",
+    [
+      "expo-audio",
+      {
+        microphonePermission: "Malzeme ve tarif aramasını sesle yazdırmak için $(PRODUCT_NAME) mikrofonunu kullanmak istiyor.",
+      },
+    ],
     [
       "expo-image-picker",
       {

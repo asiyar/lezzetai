@@ -6,6 +6,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { LocalizedText as Text } from "@/components/localized-text";
 import { RecipeCard } from "@/components/recipe-card";
 import { ScreenContainer } from "@/components/screen-container";
+import { VoiceInputButton } from "@/components/voice-input-button";
 import { getCategoriesForLocale, getRecipesForPreferences } from "@/lib/lezzet-data";
 import { useLezzet } from "@/lib/lezzet-context";
 import { getCuisineProfile } from "@/lib/cuisine-locale";
@@ -29,7 +30,7 @@ export default function DiscoverScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View><Text style={styles.eyebrow}>{cuisine.ui.exploreEyebrow}</Text><Text style={styles.title}>{cuisine.ui.discover}</Text><Text style={styles.regionLabel}>{cuisine.flag} {cuisine.region} · {regionalRecipes.length} local recipes</Text></View>
         <View style={styles.seasonCard}><View style={styles.seasonHead}><View><Text style={styles.seasonKicker}>{getSeasonName(profile.locale, season).toLocaleUpperCase(profile.locale)}</Text><Text style={styles.seasonTitle}>{seasonalPackage.title}</Text></View><IconSymbol name="leaf.fill" size={21} color="#1E4D3A" /></View><Text style={styles.seasonText}>{seasonalPackage.subtitle}</Text><Text style={styles.seasonIngredients}>{seasonalPackage.ingredients.join(" · ")}</Text></View>
-        <View style={styles.search}><IconSymbol name="magnifyingglass" size={21} color="#6B756F" /><TextInput value={query} onChangeText={setQuery} placeholder={cuisine.ui.search} placeholderTextColor="#8A938E" returnKeyType="search" style={styles.input} /></View>
+        <View style={styles.search}><IconSymbol name="magnifyingglass" size={21} color="#6B756F" /><TextInput value={query} onChangeText={setQuery} placeholder={cuisine.ui.search} placeholderTextColor="#8A938E" returnKeyType="search" style={styles.input} /><VoiceInputButton onText={setQuery} label="Tarif aramasını sesle yaz" /></View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dietChips}>{dietaryOptions.map((option) => { const active = profile.dietaryPreferences.includes(option.id); const toggle = () => updateProfile({ dietaryPreferences: active ? profile.dietaryPreferences.filter((item) => item !== option.id) : [...profile.dietaryPreferences, option.id] as DietaryPreference[] }); return <Pressable key={option.id} onPress={toggle} style={({ pressed }) => [styles.dietChip, active && styles.dietChipActive, pressed && { opacity: 0.7 }]}><IconSymbol name="leaf.fill" size={14} color={active ? "#FFFFFF" : "#1E4D3A"} /><Text style={[styles.dietText, active && styles.dietTextActive]}>{option.labels[profile.locale]}</Text></Pressable>; })}</ScrollView>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
           {categories.map((item) => <Pressable key={item} onPress={() => setCategory(item)} style={({ pressed }) => [styles.chip, category === item && styles.chipActive, pressed && { opacity: 0.7 }]}><Text style={[styles.chipText, category === item && styles.chipTextActive]}>{item}</Text></Pressable>)}

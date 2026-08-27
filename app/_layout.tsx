@@ -41,6 +41,8 @@ function AppNavigator() {
       <Stack.Screen name="diet-preferences" />
       <Stack.Screen name="allergy-preferences" />
       <Stack.Screen name="market-prices" />
+      <Stack.Screen name="scan-receipt" />
+      <Stack.Screen name="smart-shopping" />
       <Stack.Screen name="privacy" />
       <Stack.Screen name="oauth/callback" />
     </Stack>

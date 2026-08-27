@@ -7,7 +7,7 @@ import { getRecipeEstimate, scaleIngredientList } from "../lib/culinary-utils";
 import { getAdaptiveTargets } from "../lib/wearable-utils";
 import { getCuisineProfile } from "../lib/cuisine-locale";
 import { formatLocalCurrency, getCurrentSeason, getDefaultMarketPrices, getDirectAllergenMatches, getMarketCategory, getMarketCategoryKey, getSeasonalPackage, recipeMatchesDiet } from "../lib/seasonal-market";
-import { getPantryOverview, getStockUsageAmount, ingredientMatchesPantry } from "../lib/pantry-insights";
+import { getDaysUntilDate, getEffectiveExpiryDays, getLowStockShoppingSeeds, getPantryOverview, getStockUsageAmount, ingredientMatchesPantry } from "../lib/pantry-insights";
 import { kitchenToolCatalog } from "../lib/kitchen-tools";
 import { regionalRecipeExpansion } from "../lib/regional-recipe-expansion";
 
@@ -135,5 +135,21 @@ describe("LezzetAI haftalık planlama", () => {
     expect(overview.frequentLowStock).toContain("Nohut");
     expect(getStockUsageAmount(4, "paket")).toBe(2);
     expect(getStockUsageAmount(4, "g")).toBe(200);
+  });
+
+  it("etiketteki gerçek son kullanma tarihini güncel kalan gün hesabında önceliklendirir", () => {
+    const now = new Date("2026-08-27T10:00:00");
+    expect(getDaysUntilDate("2026-08-30", now)).toBe(3);
+    expect(getEffectiveExpiryDays({ favorite: false, expiresInDays: 12, expiresOn: "2026-08-30", quantity: 1, unit: "adet", lowStockThreshold: 1, uses: 0 }, now)).toBe(3);
+  });
+
+  it("azalan ve biten kiler ürünlerini alışveriş listesi tohumu olarak ayırır", () => {
+    const pantry = ["Yumurta", "Yoğurt", "Mercimek"];
+    const meta = {
+      Yumurta: { favorite: false, expiresInDays: 7, quantity: 2, unit: "adet" as const, lowStockThreshold: 2, uses: 1 },
+      Yoğurt: { favorite: false, expiresInDays: 4, quantity: 300, unit: "g" as const, lowStockThreshold: 150, uses: 0 },
+      Mercimek: { favorite: false, expiresInDays: 20, quantity: 0, unit: "paket" as const, lowStockThreshold: 1, uses: 3 },
+    };
+    expect(getLowStockShoppingSeeds(pantry, meta)).toEqual(["Yumurta", "Mercimek"]);
   });
 });

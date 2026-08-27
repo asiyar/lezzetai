@@ -41,6 +41,10 @@ const MAPPING = {
   "person.2.fill": "groups",
   "bell.fill": "notifications",
   "chevron.left": "chevron-left",
+  "mic.fill": "mic",
+  "doc.text.viewfinder": "document-scanner",
+  "photo": "photo-library",
+  "exclamationmark.triangle.fill": "warning",
 } as IconMapping;
 
 /**
