@@ -16,7 +16,7 @@ import { buildPantryWeekIdeas } from "../lib/pantry-weekly-ideas";
 import { getPantryWeeklyCopy } from "../lib/pantry-weekly-copy";
 import { getOnboardingCopy } from "../lib/onboarding-copy";
 import { getOnboardingSampleCopy } from "../lib/onboarding-sample-copy";
-import { createSamplePantryDraft, normalizePantryDraft, snapshotPantry } from "../lib/pantry-sample";
+import { createPantryTemplate, createSamplePantryDraft, normalizePantryDraft, snapshotPantry } from "../lib/pantry-sample";
 
 describe("LezzetAI haftalık planlama", () => {
   it("planlanan öğünlerde yinelenen malzemeleri tek alışveriş kalemine indirger", () => {
@@ -254,5 +254,11 @@ describe("LezzetAI haftalık planlama", () => {
     snapshot.pantry.push("Limon");
     expect(snapshot.pantry).toEqual(["Domates", "Limon"]);
     expect(snapshot.pantryMeta.Domates.quantity).toBe(4);
+  });
+
+  it("mevcut kileri adlandırılmış bir şablon olarak miktarlarıyla kaydeder", () => {
+    const template = createPantryTemplate("Hafta içi", ["Domates", "Yoğurt"], { Domates: { favorite: false, expiresInDays: 3, quantity: 4, unit: "adet", lowStockThreshold: 1, uses: 0 }, Yoğurt: { favorite: false, expiresInDays: 4, quantity: 500, unit: "g", lowStockThreshold: 100, uses: 0 } }, "template-1", "2026-08-27T12:00:00.000Z");
+    expect(template).toMatchObject({ id: "template-1", name: "Hafta içi", items: [{ name: "Domates", quantity: 4, unit: "adet" }, { name: "Yoğurt", quantity: 500, unit: "g" }] });
+    expect(createPantryTemplate("Boş", [], {}, "template-2", "2026-08-27T12:00:00.000Z")).toBeNull();
   });
 });

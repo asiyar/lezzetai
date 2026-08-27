@@ -147,3 +147,6 @@
 - [x] İlk hafta planındaki eksik malzemelerden otomatik alışveriş listesi oluşturmak
 - [x] Örnek kiler ürünlerini yüklemeden önce düzenlenebilir önizleme ekranı eklemek
 - [x] Kiler koruması, alışveriş ve örnek kiler düzenleme akışlarını test edip sürüm kaydına almak
+- [x] Kullanıcının mevcut kilerini adlandırılmış şablon olarak cihazda saklamak
+- [x] Kaydedilmiş kiler şablonlarını profil üzerinden yükleme ve kaldırma denetimleri eklemek
+- [x] Kiler şablonu işlemlerini test edip APK yayın yapılandırmasını doğrulamak
