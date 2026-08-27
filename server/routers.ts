@@ -7,15 +7,17 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { storagePut } from "./storage";
 import * as db from "./db";
+import { kitchenToolNames } from "../lib/kitchen-tools";
 
 const chefInput = z.object({
   request: z.string().trim().min(3).max(800),
   pantry: z.array(z.string().trim().min(1).max(80)).max(30),
   goal: z.string().trim().min(1).max(120),
   allergies: z.array(z.string().trim().min(1).max(80)).max(10),
-  people: z.number().int().min(1).max(8),
+  people: z.number().int().min(1).max(12),
   kitchenTools: z.array(z.string().trim().min(1).max(40)).max(10),
   locale: z.enum(["tr-TR", "en-GB", "de-DE", "es-ES", "fr-FR"]),
+  usePantryOnly: z.boolean().default(false),
 });
 
 const fallbackRecipe = {
@@ -41,8 +43,9 @@ const sharedListInput = z.object({
   seedItems: z.array(z.string().trim().min(1).max(180)).max(80),
 });
 
-const fallbackScan: { ingredients: { name: string; category: string; confidence: "Yüksek" | "Orta" }[]; suggestedPrompt: string; safetyNote: string } = {
-  ingredients: [{ name: "Fotoğraftaki malzemeler", category: "Kontrol gerekli", confidence: "Orta" }],
+type ScannedIngredient = { name: string; category: string; confidence: "Yüksek" | "Orta"; quantity: number; unit: "adet" | "g" | "ml" | "paket"; quantityConfidence: "Yüksek" | "Orta" | "Düşük" };
+const fallbackScan: { ingredients: ScannedIngredient[]; suggestedPrompt: string; safetyNote: string } = {
+  ingredients: [{ name: "Fotoğraftaki malzemeler", category: "Kontrol gerekli", confidence: "Orta", quantity: 1, unit: "adet", quantityConfidence: "Düşük" }],
   suggestedPrompt: "Fotoğraftaki malzemelerle 25 dakikada dengeli bir tarif öner.",
   safetyNote: "Tanıma tahminidir; alerjen veya içerik kararlarından önce malzemeleri kontrol et.",
 };
@@ -53,8 +56,7 @@ function normalizeEquipmentScan(content: string | null | undefined) {
   if (!content) return fallbackEquipmentScan;
   try {
     const parsed = JSON.parse(content) as { tools?: unknown; uncertain?: unknown; note?: unknown };
-    const allowedTools = ["Tava", "Fırın", "Air Fryer", "Tencere"];
-    const tools = Array.isArray(parsed.tools) ? parsed.tools.filter((item): item is string => typeof item === "string" && allowedTools.includes(item)).slice(0, 4) : [];
+    const tools = Array.isArray(parsed.tools) ? parsed.tools.filter((item): item is string => typeof item === "string" && kitchenToolNames.includes(item as (typeof kitchenToolNames)[number])).slice(0, 8) : [];
     const uncertain = Array.isArray(parsed.uncertain) ? parsed.uncertain.filter((item): item is string => typeof item === "string" && item.trim().length > 0).map((item) => item.trim().slice(0, 50)).slice(0, 4) : [];
     return { tools, uncertain, note: typeof parsed.note === "string" && parsed.note.trim() ? parsed.note.trim().slice(0, 180) : fallbackEquipmentScan.note };
   } catch { return fallbackEquipmentScan; }
@@ -71,6 +73,9 @@ function normalizeScan(content: string | null | undefined) {
         name: typeof item.name === "string" ? item.name.trim().slice(0, 60) : "",
         category: typeof item.category === "string" ? item.category.trim().slice(0, 40) : "Diğer",
         confidence: (item.confidence === "Yüksek" ? "Yüksek" : "Orta") as "Yüksek" | "Orta",
+        quantity: typeof item.quantity === "number" && Number.isFinite(item.quantity) && item.quantity > 0 ? Math.min(10_000, Math.round(item.quantity)) : 1,
+        unit: (["adet", "g", "ml", "paket"] as const).includes(item.unit as "adet" | "g" | "ml" | "paket") ? item.unit as "adet" | "g" | "ml" | "paket" : "adet",
+        quantityConfidence: (["Yüksek", "Orta", "Düşük"] as const).includes(item.quantityConfidence as "Yüksek" | "Orta" | "Düşük") ? item.quantityConfidence as "Yüksek" | "Orta" | "Düşük" : "Düşük",
       }))
       .filter((item) => item.name.length > 0)
       .slice(0, 12);
@@ -87,15 +92,15 @@ function normalizeChefRecipe(content: string | null | undefined) {
   try {
     const parsed = JSON.parse(content) as Partial<typeof fallbackRecipe>;
     const positiveNumber = (value: unknown, fallback: number) => typeof value === "number" && Number.isFinite(value) && value > 0 ? Math.round(value) : fallback;
-    const list = (value: unknown, fallback: string[]) => Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && item.trim().length > 0).slice(0, 8) : fallback;
+    const list = (value: unknown, fallback: string[], maximum: number) => Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && item.trim().length > 0).slice(0, maximum) : fallback;
     return {
       title: typeof parsed.title === "string" && parsed.title.trim() ? parsed.title.trim().slice(0, 90) : fallbackRecipe.title,
       description: typeof parsed.description === "string" && parsed.description.trim() ? parsed.description.trim().slice(0, 240) : fallbackRecipe.description,
       prepMinutes: positiveNumber(parsed.prepMinutes, fallbackRecipe.prepMinutes),
       calories: positiveNumber(parsed.calories, fallbackRecipe.calories),
       protein: positiveNumber(parsed.protein, fallbackRecipe.protein),
-      ingredients: list(parsed.ingredients, fallbackRecipe.ingredients),
-      steps: list(parsed.steps, fallbackRecipe.steps),
+      ingredients: list(parsed.ingredients, fallbackRecipe.ingredients, 12),
+      steps: list(parsed.steps, fallbackRecipe.steps, 8),
       chefNote: typeof parsed.chefNote === "string" && parsed.chefNote.trim() ? parsed.chefNote.trim().slice(0, 220) : fallbackRecipe.chefNote,
     };
   } catch { return fallbackRecipe; }
@@ -112,8 +117,8 @@ export const appRouter = router({
       const response = await invokeLLM({
         model: "gpt-5-mini",
         messages: [
-          { role: "system", content: `You are LezzetAI's regional home-cooking assistant. Reply entirely in the user's selected locale (${input.locale}) and plan a recipe that genuinely belongs to that region's everyday food culture: tr-TR Türkiye, en-GB United Kingdom, de-DE Deutschland, es-ES España, fr-FR France. Do not substitute a Turkish default dish for a German, Spanish, French or British profile. Respect goals, pantry, people, allergens and owned kitchen tools. Suggest only recipes possible with owned tools; if none are supplied, assume a basic pan and pot. Make no medical or certain health claims and do not include allergens. Return valid JSON only: {title, description, prepMinutes, calories, protein, ingredients, steps, chefNote}. Use 4-8 concise ingredients and 3-6 clear steps.` },
-          { role: "user", content: `Request: ${input.request}\nSelected locale and cuisine: ${input.locale}\nPantry: ${input.pantry.join(", ") || "Not specified"}\nGoal: ${input.goal}\nPeople: ${input.people}\nAvoid: ${input.allergies.join(", ") || "None"}\nAvailable equipment: ${input.kitchenTools.join(", ") || "Not specified"}` },
+          { role: "system", content: `You are LezzetAI's regional home-cooking assistant. Reply entirely in the user's selected locale (${input.locale}) and plan a recipe that genuinely belongs to that region's everyday food culture: tr-TR Türkiye, en-GB United Kingdom, de-DE Deutschland, es-ES España, fr-FR France. Do not substitute a Turkish default dish for a German, Spanish, French or British profile. Respect goals, pantry, people, allergens and owned kitchen tools. Suggest only recipes possible with owned tools; if none are supplied, assume a basic pan and pot. Make no medical or certain health claims and do not include allergens. Return valid JSON only: {title, description, prepMinutes, calories, protein, ingredients, steps, chefNote}. Give 5-12 ingredients with clear quantity and unit for ${input.people} people, and 5-8 complete steps. Every step should contain a concrete action and, where useful, a time, texture, heat or temperature cue. If pantry-only is true, use only listed pantry ingredients plus water, salt, pepper and basic oil; if that cannot form a safe recipe, explain the smallest missing item in chefNote instead of inventing pantry items.` },
+          { role: "user", content: `Request: ${input.request}\nSelected locale and cuisine: ${input.locale}\nPantry: ${input.pantry.join(", ") || "Not specified"}\nPantry-only request: ${input.usePantryOnly ? "Yes — do not add outside ingredients." : "No — additions are acceptable."}\nGoal: ${input.goal}\nPeople: ${input.people}\nAvoid: ${input.allergies.join(", ") || "None"}\nAvailable equipment: ${input.kitchenTools.join(", ") || "Not specified"}` },
         ],
         response_format: { type: "json_object" },
       });
@@ -127,8 +132,8 @@ export const appRouter = router({
       const response = await invokeLLM({
         model: "gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "Sen LezzetAI'nin görsel malzeme tanıma yardımcısısın. Fotoğrafta görünen, mutfakta kullanılabilecek malzemeleri Türkçe listele. Görünmeyen veya belirsiz malzemeyi kesinmiş gibi yazma. Marka, ambalaj ve kişi isimlerini yok say. Sadece geçerli JSON döndür: {ingredients:[{name,category,confidence}],suggestedPrompt,safetyNote}. confidence yalnızca 'Yüksek' veya 'Orta' olabilir. En fazla 12 malzeme döndür. safetyNote kısa ve kullanıcıya görüntünün tahmini olduğunu hatırlatsın." },
-          { role: "user", content: [{ type: "text", text: "Bu fotoğraftaki malzemeleri tanı ve eldeki malzemelere uygun bir tarif istemi hazırla." }, { type: "image_url", image_url: { url: upload.url, detail: "low" } }] },
+          { role: "system", content: "Sen LezzetAI'nin görsel malzeme tanıma yardımcısısın. Fotoğrafta görünen, mutfakta kullanılabilecek malzemeleri Türkçe listele. Görünmeyen veya belirsiz malzemeyi kesinmiş gibi yazma. Marka, ambalaj ve kişi isimlerini yok say. Sadece geçerli JSON döndür: {ingredients:[{name,category,confidence,quantity,unit,quantityConfidence}],suggestedPrompt,safetyNote}. confidence yalnızca 'Yüksek' veya 'Orta' olabilir. unit yalnızca 'adet', 'g', 'ml' veya 'paket' olabilir. quantity tek bir fotoğrafa dayalı yaklaşık tahmindir; net değilse 1 ve 'Düşük' döndür. quantityConfidence yalnızca 'Yüksek', 'Orta' veya 'Düşük' olabilir. En fazla 12 malzeme döndür. safetyNote kısa ve kullanıcıya kimlik/miktar tahminlerini onaylamasını hatırlatsın." },
+          { role: "user", content: [{ type: "text", text: "Bu fotoğraftaki malzemeleri, görünür adetlerini ya da yaklaşık paket/ağırlıklarını tanı. Sonucu kullanıcı kilerine eklemeden önce onaylayacak." }, { type: "image_url", image_url: { url: upload.url, detail: "low" } }] },
         ],
         response_format: { type: "json_object" },
       });
@@ -142,7 +147,7 @@ export const appRouter = router({
       const response = await invokeLLM({
         model: "gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "Sen LezzetAI'nin görsel mutfak ekipmanı tanıma yardımcısın. Fotoğrafta açıkça görülen araçlardan yalnızca şu izinli değerleri kullan: Tava, Fırın, Air Fryer, Tencere. Fırın ancak gerçek fırın görünüyorsa, air fryer ancak air fryer görünüyorsa eklenmeli. Belirsiz araçları uncertain dizisine yaz; kesinmiş gibi söyleme. Yalnızca geçerli JSON döndür: {tools:string[],uncertain:string[],note:string}." },
+          { role: "system", content: `Sen LezzetAI'nin görsel mutfak ekipmanı tanıma yardımcısın. Fotoğrafta açıkça görülen araçlardan yalnızca şu izinli değerleri kullan: ${kitchenToolNames.join(", ")}. Belirsiz araçları uncertain dizisine yaz; kesinmiş gibi söyleme. Yalnızca geçerli JSON döndür: {tools:string[],uncertain:string[],note:string}.` },
           { role: "user", content: [{ type: "text", text: "Bu mutfak fotoğrafındaki pişirme ekipmanlarını tanı." }, { type: "image_url", image_url: { url: upload.url, detail: "low" } }] },
         ],
         response_format: { type: "json_object" },

@@ -7,6 +7,9 @@ import { getRecipeEstimate, scaleIngredientList } from "../lib/culinary-utils";
 import { getAdaptiveTargets } from "../lib/wearable-utils";
 import { getCuisineProfile } from "../lib/cuisine-locale";
 import { formatLocalCurrency, getCurrentSeason, getDefaultMarketPrices, getDirectAllergenMatches, getMarketCategory, getMarketCategoryKey, getSeasonalPackage, recipeMatchesDiet } from "../lib/seasonal-market";
+import { getPantryOverview, getStockUsageAmount, ingredientMatchesPantry } from "../lib/pantry-insights";
+import { kitchenToolCatalog } from "../lib/kitchen-tools";
+import { regionalRecipeExpansion } from "../lib/regional-recipe-expansion";
 
 describe("LezzetAI haftalık planlama", () => {
   it("planlanan öğünlerde yinelenen malzemeleri tek alışveriş kalemine indirger", () => {
@@ -114,5 +117,23 @@ describe("LezzetAI haftalık planlama", () => {
     expect(getMarketCategoryKey("Somon")).toBe("protein");
     expect(getMarketCategoryKey("Pırasa")).toBe("produce");
     expect(getDefaultMarketPrices("tr-TR").protein).toBeGreaterThan(getDefaultMarketPrices("tr-TR").bakery);
+  });
+
+  it("her dil-bölge için temel sekize ek olarak en az on iki ayrıntılı yöresel tarif ve geniş araç kataloğu sunar", () => {
+    (["tr-TR", "en-GB", "de-DE", "es-ES", "fr-FR"] as const).forEach((locale) => expect(regionalRecipeExpansion.filter((recipe) => recipe.cuisine === locale).length).toBeGreaterThanOrEqual(12));
+    expect(kitchenToolCatalog.length).toBeGreaterThanOrEqual(15);
+    expect(kitchenToolCatalog.map((tool) => tool.name)).toContain("Düdüklü tencere");
+  });
+
+  it("kiler eşleşmesi, stok seviyesi ve porsiyona göre tüketim miktarını hesaplar", () => {
+    const pantry = ["Nohut", "Domates"];
+    const meta = { Nohut: { favorite: false, expiresInDays: 5, quantity: 1, unit: "paket" as const, lowStockThreshold: 1, uses: 3 }, Domates: { favorite: false, expiresInDays: 2, quantity: 5, unit: "adet" as const, lowStockThreshold: 2, uses: 0 } };
+    const overview = getPantryOverview([{ id: "guiso", ingredients: ["250 g nohut", "2 domates", "soğan"] }], pantry, meta, 4);
+    expect(ingredientMatchesPantry("250 g nohut", "Nohut")).toBe(true);
+    expect(overview.cookableRecipeCount).toBe(1);
+    expect(overview.lowStock).toContain("Nohut");
+    expect(overview.frequentLowStock).toContain("Nohut");
+    expect(getStockUsageAmount(4, "paket")).toBe(2);
+    expect(getStockUsageAmount(4, "g")).toBe(200);
   });
 });

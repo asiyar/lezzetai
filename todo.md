@@ -99,3 +99,13 @@
 - [x] Yerel fiyatları alışveriş özeti ve haftalık plan tahminlerinde kullanmak
 - [x] Her bölge ve mevsim için tarif kataloğunu genişletip mevsimsel favoriler bölümünü eklemek
 - [x] Alerjen, fiyat ve mevsimsel öneri akışlarını birim testleriyle doğrulamak
+- [x] Mutfak ekipmanı seçeneklerini bölgesel pişirme araçlarıyla genişletmek
+- [x] Kişi sayısı desteğini 4 sınırının ötesine çıkarıp tarif ve maliyet hesaplarını uyarlamak
+- [x] Beş bölgenin her biri için en az 20 kaynak kontrollü yerel tarif ve ayrıntılı uygulama adımları eklemek
+- [x] Daha fazla tarif isteyen kullanıcıyı gereksinim ve kiler tercihini soran AI Şef akışına yönlendirmek
+- [x] Alt sekmelere kiler girişi ekleyip yazı veya fotoğrafla malzeme ekleme akışını birleştirmek
+- [x] Fotoğrafla kiler taramasında malzeme, adet ve yaklaşık miktar analizini eklemek
+- [x] Kilerden üretilebilecek tarif, öğün ve tahmini gün sayısı sayaçlarını görünür kılmak
+- [x] Düşük stok ve sık kullanılan ürün uyarılarını kilerde ve bildirimlerde göstermek
+- [x] Pişirilen tarifin kullanılan malzemelerini kullanıcı onayıyla kilerden düşmek
+- [x] Yeni ekipman, tarif, AI yönlendirme ve kiler akışlarını birim testleriyle doğrulamak

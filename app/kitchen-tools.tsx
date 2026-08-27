@@ -5,13 +5,7 @@ import { router } from "expo-router";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { ScreenContainer } from "@/components/screen-container";
 import { useLezzet } from "@/lib/lezzet-context";
-
-const tools = [
-  { name: "Tava", icon: "flame.fill" as const, note: "Sote, kızartma ve hızlı tarifler" },
-  { name: "Fırın", icon: "cabinet.fill" as const, note: "Fırın yemekleri ve sebzeler" },
-  { name: "Air Fryer", icon: "sparkles" as const, note: "Az yağlı, pratik pişirme" },
-  { name: "Tencere", icon: "clock" as const, note: "Çorba, makarna ve tencere yemeği" },
-];
+import { kitchenToolCatalog } from "@/lib/kitchen-tools";
 
 export default function KitchenToolsScreen() {
   const { kitchenTools, toggleKitchenTool } = useLezzet();
@@ -20,7 +14,7 @@ export default function KitchenToolsScreen() {
     <Text style={styles.title}>Hangi araçlar sende var?</Text><Text style={styles.subtitle}>Seçtiklerin, yalnızca yapabileceğin tarifleri ve alternatifleri öne çıkarmamı sağlar.</Text>
     <ImageBackground source={{ uri: "/manus-storage/lezzetai-kitchen-tools_ee97bad0.jpg" }} imageStyle={styles.heroImage} style={styles.hero}><View style={styles.heroOverlay}><View style={styles.heroPill}><IconSymbol name="sparkles" size={15} color="#1E4D3A" /><Text style={styles.heroPillText}>MUTFAĞINA UYGUN</Text></View><Text style={styles.heroTitle}>{kitchenTools.length ? `${kitchenTools.length} araç seçtin` : "Pişirme tarzını tanıyalım"}</Text></View></ImageBackground>
     <View style={styles.toolsHead}><Text style={styles.sectionTitle}>Pişirme araçların</Text><Pressable onPress={() => router.push("/scan-tools" as never)} style={({ pressed }) => [styles.scanLink, pressed && { opacity: 0.65 }]}><IconSymbol name="camera.fill" size={14} color="#1E4D3A" /><Text style={styles.scanLinkText}>Fotoğrafla tanı</Text></Pressable></View>
-    <View style={styles.grid}>{tools.map((tool) => { const selected = kitchenTools.includes(tool.name); return <Pressable key={tool.name} onPress={() => toggleKitchenTool(tool.name)} style={({ pressed }) => [styles.toolCard, selected && styles.toolCardSelected, pressed && { opacity: 0.74, transform: [{ scale: 0.98 }] }]}><View style={[styles.toolIcon, selected && styles.toolIconSelected]}><IconSymbol name={tool.icon} size={24} color={selected ? "#FFFFFF" : "#1E4D3A"} /></View><Text style={[styles.toolName, selected && styles.toolNameSelected]}>{tool.name}</Text><Text style={[styles.toolNote, selected && styles.toolNoteSelected]}>{tool.note}</Text><View style={[styles.selectMark, selected && styles.selectMarkSelected]}>{selected ? <IconSymbol name="checkmark.circle.fill" size={18} color="#FFFFFF" /> : null}</View></Pressable>; })}</View>
+    <View style={styles.grid}>{kitchenToolCatalog.map((tool) => { const selected = kitchenTools.includes(tool.name); return <Pressable key={tool.name} onPress={() => toggleKitchenTool(tool.name)} style={({ pressed }) => [styles.toolCard, selected && styles.toolCardSelected, pressed && { opacity: 0.74, transform: [{ scale: 0.98 }] }]}><View style={[styles.toolIcon, selected && styles.toolIconSelected]}><IconSymbol name={tool.icon} size={24} color={selected ? "#FFFFFF" : "#1E4D3A"} /></View><Text style={[styles.toolName, selected && styles.toolNameSelected]}>{tool.name}</Text><Text style={[styles.toolNote, selected && styles.toolNoteSelected]}>{tool.note}</Text><View style={[styles.selectMark, selected && styles.selectMarkSelected]}>{selected ? <IconSymbol name="checkmark.circle.fill" size={18} color="#FFFFFF" /> : null}</View></Pressable>; })}</View>
     <View style={styles.info}><IconSymbol name="leaf.fill" size={18} color="#1E4D3A" /><Text style={styles.infoText}>Araç seçmezsen temel ocak ve tencere yöntemleri varsayılır. Seçimlerini istediğin zaman güncelleyebilirsin.</Text></View>
     <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.done, pressed && { opacity: 0.84, transform: [{ scale: 0.985 }] }]}><Text style={styles.doneText}>Seçimlerimi kullan</Text><IconSymbol name="chevron.right" size={19} color="#FFFFFF" /></Pressable>
   </ScrollView></ScreenContainer>;

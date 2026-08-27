@@ -5,6 +5,7 @@ import { getEquipmentAdvice as getAdvice } from "@/lib/equipment-advice";
 import { uniqueShoppingItems } from "@/lib/meal-planning";
 import { buildPersonalWeekPlan, findPersonalMenuAlternative } from "@/lib/personal-menu";
 import { getCurrentSeason, recipeMatchesDiet, type DietaryPreference, type DietaryTag, type Season } from "@/lib/seasonal-market";
+import { regionalRecipeExpansion } from "@/lib/regional-recipe-expansion";
 
 export type Recipe = {
   id: string; cuisine: CuisineLocale; title: string; subtitle: string; category: string; minutes: number; calories: number; protein: number; carbs: number; fat: number; estimatedCost: number; difficulty: "Kolay" | "Orta"; tools: string[]; toolTimes: Record<string, number>; fallbackMethod: string; image: ImageSourcePropType; accent: string; ingredients: string[]; steps: string[]; tags: string[]; dietaryTags: DietaryTag[]; seasons: Season[];
@@ -30,8 +31,8 @@ const recipeMeta: Record<string, { dietaryTags: DietaryTag[]; seasons: Season[] 
   "fr-asperges": { dietaryTags: ["vegan", "gluten-free"], seasons: ["spring"] }, "fr-tian": { dietaryTags: ["vegan", "gluten-free"], seasons: ["summer"] }, "fr-potimarron": { dietaryTags: ["vegan", "gluten-free"], seasons: ["autumn"] }, "fr-chou": { dietaryTags: ["vegan", "gluten-free"], seasons: ["winter"] },
 };
 
-function makeRecipe(cuisine: CuisineLocale, id: string, title: string, subtitle: string, category: string, minutes: number, calories: number, protein: number, tools: string[], ingredients: string[], steps: string[], imageIndex: number): Recipe {
-  const meta = recipeMeta[id] ?? { dietaryTags: [] as DietaryTag[], seasons: ["spring", "summer", "autumn", "winter"] as Season[] };
+function makeRecipe(cuisine: CuisineLocale, id: string, title: string, subtitle: string, category: string, minutes: number, calories: number, protein: number, tools: string[], ingredients: string[], steps: string[], imageIndex: number, explicitMeta?: { dietaryTags: DietaryTag[]; seasons: Season[] }): Recipe {
+  const meta = explicitMeta ?? recipeMeta[id] ?? { dietaryTags: [] as DietaryTag[], seasons: ["spring", "summer", "autumn", "winter"] as Season[] };
   return { id, cuisine, title, subtitle, category, minutes, calories, protein, carbs: Math.max(20, Math.round(calories * 0.11)), fat: Math.max(8, Math.round(calories * 0.035)), estimatedCost: Math.round(75 + calories * 0.28), difficulty: minutes > 34 ? "Orta" : "Kolay", tools, toolTimes: Object.fromEntries(tools.map((tool) => [tool, minutes])), fallbackMethod: "Use a covered pan over a gentle heat as a simple alternative.", image: images[imageIndex % images.length], accent: ["#DDE8DA", "#FCE6D2", "#F9E2DB", "#E0ECE8"][imageIndex % 4], ingredients, steps, tags: [cuisine, category, `${minutes} dk`], dietaryTags: meta.dietaryTags, seasons: meta.seasons };
 }
 
@@ -76,6 +77,7 @@ export const recipes: Recipe[] = [
   makeRecipe("fr-FR", "fr-tian", "Tian de Légumes", "Courgette, tomate et aubergine au four", "Été", 42, 355, 10, ["Four", "Plat à gratin"], ["Courgettes", "Tomates", "Aubergine", "Ail", "Herbes"], ["Trancher les légumes.", "Les disposer dans le plat.", "Cuire doucement au four."], 2),
   makeRecipe("fr-FR", "fr-potimarron", "Potimarron aux Lentilles", "Plat d’automne aux carottes rôties", "Automne", 38, 445, 20, ["Casserole", "Four"], ["Potimarron", "Lentilles", "Carottes", "Oignon", "Thym"], ["Rôtir le potimarron.", "Cuire les lentilles.", "Assembler avec thym et oignon."], 0),
   makeRecipe("fr-FR", "fr-chou", "Mijoté de Chou et Haricots", "Un plat d’hiver aux légumes doux", "Hiver", 36, 410, 18, ["Casserole"], ["Chou", "Haricots blancs", "Carottes", "Poireaux", "Moutarde"], ["Faire revenir les poireaux.", "Ajouter chou et carottes.", "Mijoter avec les haricots."], 3),
+  ...regionalRecipeExpansion.map((item) => makeRecipe(item.cuisine, item.id, item.title, item.subtitle, item.category, item.minutes, item.calories, item.protein, item.tools, item.ingredients, item.steps, item.imageIndex, { dietaryTags: item.dietaryTags, seasons: item.seasons })),
 ];
 
 export function getRecipesForLocale(locale?: CuisineLocale) { return recipes.filter((item) => item.cuisine === (locale ?? "tr-TR")); }

@@ -11,3 +11,4 @@ export type CuisineProfile = (typeof cuisineLocales)[number];
 export const defaultCuisineLocale: CuisineLocale = "tr-TR";
 export function getCuisineProfile(locale?: string): CuisineProfile { return cuisineLocales.find((item) => item.code === locale) ?? cuisineLocales[0]; }
 export function isCuisineLocale(value: unknown): value is CuisineLocale { return typeof value === "string" && cuisineLocales.some((item) => item.code === value); }
+export function getPantryLabel(locale?: CuisineLocale) { return ({ "tr-TR": "Kiler", "en-GB": "Pantry", "de-DE": "Vorrat", "es-ES": "Despensa", "fr-FR": "Garde-manger" } as Record<CuisineLocale, string>)[locale ?? defaultCuisineLocale]; }
