@@ -150,3 +150,8 @@
 - [x] Kullanıcının mevcut kilerini adlandırılmış şablon olarak cihazda saklamak
 - [x] Kaydedilmiş kiler şablonlarını profil üzerinden yükleme ve kaldırma denetimleri eklemek
 - [x] Kiler şablonu işlemlerini test edip APK yayın yapılandırmasını doğrulamak
+- [x] Kiler şablonlarına etiket ekleme ve etiketle filtreleme desteği eklemek
+- [x] Kiler şablonları arasında ad, ürün ve etiketle arama desteği eklemek
+- [x] Şablon yükleme öncesi malzeme ve genel besin özeti önizlemesi eklemek
+- [x] Kiler şablonlarını mesajlaşma uygulamalarında paylaşma eylemi eklemek
+- [x] Şablon keşif, özet ve paylaşım akışlarını test edip sürüm kaydına almak

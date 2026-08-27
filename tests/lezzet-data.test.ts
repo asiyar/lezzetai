@@ -16,7 +16,7 @@ import { buildPantryWeekIdeas } from "../lib/pantry-weekly-ideas";
 import { getPantryWeeklyCopy } from "../lib/pantry-weekly-copy";
 import { getOnboardingCopy } from "../lib/onboarding-copy";
 import { getOnboardingSampleCopy } from "../lib/onboarding-sample-copy";
-import { createPantryTemplate, createSamplePantryDraft, normalizePantryDraft, snapshotPantry } from "../lib/pantry-sample";
+import { buildPantryTemplateShareMessage, createPantryTemplate, createSamplePantryDraft, getPantryNutritionSummary, normalizePantryDraft, normalizeTemplateTags, snapshotPantry } from "../lib/pantry-sample";
 
 describe("LezzetAI haftalık planlama", () => {
   it("planlanan öğünlerde yinelenen malzemeleri tek alışveriş kalemine indirger", () => {
@@ -260,5 +260,24 @@ describe("LezzetAI haftalık planlama", () => {
     const template = createPantryTemplate("Hafta içi", ["Domates", "Yoğurt"], { Domates: { favorite: false, expiresInDays: 3, quantity: 4, unit: "adet", lowStockThreshold: 1, uses: 0 }, Yoğurt: { favorite: false, expiresInDays: 4, quantity: 500, unit: "g", lowStockThreshold: 100, uses: 0 } }, "template-1", "2026-08-27T12:00:00.000Z");
     expect(template).toMatchObject({ id: "template-1", name: "Hafta içi", items: [{ name: "Domates", quantity: 4, unit: "adet" }, { name: "Yoğurt", quantity: 500, unit: "g" }] });
     expect(createPantryTemplate("Boş", [], {}, "template-2", "2026-08-27T12:00:00.000Z")).toBeNull();
+  });
+
+  it("şablon etiketlerini arama için temizler ve tekrar edenleri kaldırır", () => {
+    expect(normalizeTemplateTags(" hızlı, vegan , Hızlı, , hafta içi ")).toEqual(["Hızlı", "vegan", "hafta içi"]);
+  });
+
+  it("şablon önizlemesinde kalori tahmini yapmadan genel besin profilini sınıflandırır", () => {
+    const summary = getPantryNutritionSummary([{ name: "Mercimek", quantity: 2, unit: "paket" }, { name: "Domates", quantity: 4, unit: "adet" }, { name: "Yoğurt", quantity: 500, unit: "g" }, { name: "Bulgur", quantity: 1, unit: "paket" }]);
+    expect(summary).toMatchObject({ itemCount: 4, totalQuantity: 507 });
+    expect(summary.proteinSources).toContain("Mercimek");
+    expect(summary.produceItems).toContain("Domates");
+    expect(summary.fibreSources).toContain("Bulgur");
+    expect(summary.dairyItems).toContain("Yoğurt");
+  });
+
+  it("kiler şablonunu ürünleri ve etiketleriyle mesajlaşma paylaşımına hazırlar", () => {
+    const message = buildPantryTemplateShareMessage({ id: "template-1", name: "Hafta içi", tags: ["hızlı", "vegan"], createdAt: "2026-08-27", items: [{ name: "Mercimek", quantity: 2, unit: "paket" }] });
+    expect(message).toContain("#hızlı #vegan");
+    expect(message).toContain("• 2 paket Mercimek");
   });
 });
