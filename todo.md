@@ -124,3 +124,7 @@
 - [x] Cihaz kamerasıyla çalışan barkod okuma ve ürün onayı akışı eklemek
 - [x] Barkodla eklenen ürünleri miktar, tarih ve kiler kaydıyla birleştirmek
 - [x] Ortak kiler, harcama analizi ve barkod akışlarını birim testleriyle doğrulamak
+- [x] Mağaza yayını için zorunlu hesap, varlık, gizlilik ve gerçek cihaz gereksinimlerini denetlemek
+- [x] Yapay zekâ servisinin mevcut bağlantısını ve yayın öncesi çalışma modelini doğrulamak
+- [x] Kilerdeki malzemelere göre haftalık yemek fikirlerini görünür bir plana dönüştürmek
+- [x] Yeni kiler odaklı planlama akışını test etmek ve sürüm kaydına almak

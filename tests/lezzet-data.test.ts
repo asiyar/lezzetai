@@ -12,6 +12,7 @@ import { kitchenToolCatalog } from "../lib/kitchen-tools";
 import { regionalRecipeExpansion } from "../lib/regional-recipe-expansion";
 import { summarizeReceiptSpending } from "../lib/spending-insights";
 import { normalizeBarcodeInput } from "../lib/barcode";
+import { buildPantryWeekIdeas } from "../lib/pantry-weekly-ideas";
 
 describe("LezzetAI haftalık planlama", () => {
   it("planlanan öğünlerde yinelenen malzemeleri tek alışveriş kalemine indirger", () => {
@@ -174,5 +175,16 @@ describe("LezzetAI haftalık planlama", () => {
     expect(normalizeBarcodeInput("869-0504 123456")).toBe("8690504123456");
     expect(normalizeBarcodeInput("barkod yok")).toBeNull();
     expect(normalizeBarcodeInput("1234567")).toBeNull();
+  });
+
+  it("kiler fikir planı yalnızca eşleşen tarifleri sıralar ve yaklaşan ürünleri öne alır", () => {
+    const ideas = buildPantryWeekIdeas([
+      { id: "corba", title: "Mercimek çorbası", ingredients: ["Mercimek", "Soğan"], minutes: 30 },
+      { id: "salata", title: "Rokalı salata", ingredients: ["Roka", "Limon"], minutes: 12 },
+      { id: "uyumsuz", title: "Mantar sote", ingredients: ["Mantar"], minutes: 15 },
+    ], ["Mercimek", "Roka"], { Mercimek: { favorite: false, expiresInDays: 1, quantity: 1, unit: "paket", lowStockThreshold: 1, uses: 0 }, Roka: { favorite: false, expiresInDays: 5, quantity: 1, unit: "adet", lowStockThreshold: 1, uses: 0 } }, 2);
+    expect(ideas.map((idea) => idea.id)).toEqual(["corba", "salata"]);
+    expect(ideas[0].expiringMatches).toEqual(["Mercimek"]);
+    expect(ideas[0].missingIngredients).toContain("Soğan");
   });
 });
