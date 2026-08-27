@@ -131,3 +131,6 @@
 - [x] Kiler odaklı haftalık fikir planına isteğe bağlı diyet filtresi eklemek
 - [x] Haftalık planı sistem paylaşım menüsüne aktaracak mesajlaşma paylaşım eylemi eklemek
 - [x] Diyet filtresi ve paylaşım akışını test ederek sürüm kaydına almak
+- [x] Dil-bölge seçiminin tarif, haftalık plan, kiler fikirleri ve AI Şef üzerindeki etkisini uçtan uca denetlemek
+- [x] Dil seçildiğinde kalan sabit metinleri ve bölgesel içerik bağlarını düzeltmek
+- [x] Beş dil-bölge senaryosunu birim testlerle doğrulayıp sürüm kaydına almak

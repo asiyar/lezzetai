@@ -13,6 +13,7 @@ import { regionalRecipeExpansion } from "../lib/regional-recipe-expansion";
 import { summarizeReceiptSpending } from "../lib/spending-insights";
 import { normalizeBarcodeInput } from "../lib/barcode";
 import { buildPantryWeekIdeas } from "../lib/pantry-weekly-ideas";
+import { getPantryWeeklyCopy } from "../lib/pantry-weekly-copy";
 
 describe("LezzetAI haftalık planlama", () => {
   it("planlanan öğünlerde yinelenen malzemeleri tek alışveriş kalemine indirger", () => {
@@ -192,5 +193,26 @@ describe("LezzetAI haftalık planlama", () => {
     expect(ideas.map((idea) => idea.id)).toEqual(["corba", "salata"]);
     expect(ideas[0].expiringMatches).toEqual(["Mercimek"]);
     expect(ideas[0].missingIngredients).toContain("Soğan");
+  });
+
+  it("beş dil-bölge seçiminin her birinde yalnızca o bölgenin tarifleriyle haftalık plan oluşturur", () => {
+    (["tr-TR", "en-GB", "de-DE", "es-ES", "fr-FR"] as const).forEach((locale) => {
+      const localRecipes = regionalRecipeExpansion.filter((recipe) => recipe.cuisine === locale);
+      expect(localRecipes.length).toBeGreaterThanOrEqual(12);
+      expect(localRecipes.every((recipe) => recipe.cuisine === locale)).toBe(true);
+      const planRecipes = localRecipes.map((recipe) => ({ ...recipe, tags: [] }));
+      const plan = buildPersonalWeekPlan(planRecipes, { pantry: [], favoriteIngredients: [], goal: "Dengeli beslenme", allergies: [], kitchenTools: [], locale });
+      expect(plan).toHaveLength(7);
+      expect(plan.every((item) => localRecipes.some((recipe) => recipe.id === item.recipeId))).toBe(true);
+    });
+  });
+
+  it("kiler odaklı haftalık plan metinlerini beş seçili dilde sunar", () => {
+    (["tr-TR", "en-GB", "de-DE", "es-ES", "fr-FR"] as const).forEach((locale) => {
+      const copy = getPantryWeeklyCopy(locale);
+      expect(copy.title.length).toBeGreaterThan(4);
+      expect(copy.applyTitle.length).toBeGreaterThan(4);
+      expect(copy.summary("Test")).toContain("Test");
+    });
   });
 });
