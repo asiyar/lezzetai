@@ -43,5 +43,18 @@ export const familyListItems = mysqlTable("family_list_items", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+export const familyPantryItems = mysqlTable("family_pantry_items", {
+  id: int("id").autoincrement().primaryKey(),
+  listId: int("listId").notNull(),
+  name: varchar("name", { length: 180 }).notNull(),
+  quantity: int("quantity").default(1).notNull(),
+  unit: varchar("unit", { length: 16 }).default("adet").notNull(),
+  expiresOn: varchar("expiresOn", { length: 10 }),
+  barcode: varchar("barcode", { length: 64 }),
+  updatedBy: varchar("updatedBy", { length: 80 }).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
 export type FamilyList = typeof familyLists.$inferSelect;
 export type FamilyListItem = typeof familyListItems.$inferSelect;
+export type FamilyPantryItem = typeof familyPantryItems.$inferSelect;

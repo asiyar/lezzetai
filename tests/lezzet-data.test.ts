@@ -10,6 +10,8 @@ import { formatLocalCurrency, getCurrentSeason, getDefaultMarketPrices, getDirec
 import { getDaysUntilDate, getEffectiveExpiryDays, getLowStockShoppingSeeds, getPantryOverview, getStockUsageAmount, ingredientMatchesPantry } from "../lib/pantry-insights";
 import { kitchenToolCatalog } from "../lib/kitchen-tools";
 import { regionalRecipeExpansion } from "../lib/regional-recipe-expansion";
+import { summarizeReceiptSpending } from "../lib/spending-insights";
+import { normalizeBarcodeInput } from "../lib/barcode";
 
 describe("LezzetAI haftalık planlama", () => {
   it("planlanan öğünlerde yinelenen malzemeleri tek alışveriş kalemine indirger", () => {
@@ -151,5 +153,26 @@ describe("LezzetAI haftalık planlama", () => {
       Mercimek: { favorite: false, expiresInDays: 20, quantity: 0, unit: "paket" as const, lowStockThreshold: 1, uses: 3 },
     };
     expect(getLowStockShoppingSeeds(pantry, meta)).toEqual(["Yumurta", "Mercimek"]);
+  });
+
+  it("fiş harcama analizi veri yokken örnek veya tahmini tutar üretmez", () => {
+    expect(summarizeReceiptSpending([])).toEqual({ total: 0, categories: [], topCategory: null, purchaseCount: 0 });
+  });
+
+  it("onaylı gerçek fiş satırlarını kategoriye göre toplar ve en yüksek kategoriyi bulur", () => {
+    const summary = summarizeReceiptSpending([
+      { id: "1", name: "Yoğurt", categoryKey: "Süt ürünleri", amount: 42, purchasedOn: "2026-08-20" },
+      { id: "2", name: "Peynir", categoryKey: "Süt ürünleri", amount: 58, purchasedOn: "2026-08-20" },
+      { id: "3", name: "Domates", categoryKey: "Sebze & meyve", amount: 25, purchasedOn: "2026-08-20" },
+    ]);
+    expect(summary.total).toBe(125);
+    expect(summary.topCategory).toMatchObject({ key: "Süt ürünleri", amount: 100, count: 2, share: 80 });
+    expect(summary.categories[1]).toMatchObject({ key: "Sebze & meyve", amount: 25, share: 20 });
+  });
+
+  it("barkod girdisini yalnızca geçerli EAN/UPC rakamlarına indirger", () => {
+    expect(normalizeBarcodeInput("869-0504 123456")).toBe("8690504123456");
+    expect(normalizeBarcodeInput("barkod yok")).toBeNull();
+    expect(normalizeBarcodeInput("1234567")).toBeNull();
   });
 });

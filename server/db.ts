@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { FamilyListItem, InsertUser, familyListItems, familyLists, users } from "../drizzle/schema";
+import { FamilyListItem, FamilyPantryItem, InsertUser, familyListItems, familyLists, familyPantryItems, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -123,4 +123,39 @@ export async function getFamilyListByCode(inviteCode: string) {
   if (!list) throw new Error("Bu davet koduyla eşleşen aile listesi bulunamadı.");
   const items = await db.select().from(familyListItems).where(eq(familyListItems.listId, list.id));
   return { list, items };
+}
+
+export async function getFamilyPantryByCode(inviteCode: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Ortak kiler veritabanı şu an kullanılamıyor.");
+  const list = (await db.select().from(familyLists).where(eq(familyLists.inviteCode, inviteCode)).limit(1))[0];
+  if (!list) throw new Error("Bu davet koduyla eşleşen aile alanı bulunamadı.");
+  const items = await db.select().from(familyPantryItems).where(eq(familyPantryItems.listId, list.id));
+  return { list, items };
+}
+
+export async function upsertFamilyPantryItem(input: { inviteCode: string; name: string; quantity: number; unit: string; expiresOn?: string; barcode?: string; updatedBy: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Ortak kiler veritabanı şu an kullanılamıyor.");
+  const list = (await db.select().from(familyLists).where(eq(familyLists.inviteCode, input.inviteCode)).limit(1))[0];
+  if (!list) throw new Error("Paylaşılan aile alanı bulunamadı.");
+  const normalizedName = input.name.trim();
+  const items = await db.select().from(familyPantryItems).where(eq(familyPantryItems.listId, list.id));
+  const current = items.find((item) => item.name.toLocaleLowerCase("tr-TR") === normalizedName.toLocaleLowerCase("tr-TR"));
+  const values = { name: normalizedName, quantity: Math.max(0, Math.round(input.quantity)), unit: input.unit.slice(0, 16), expiresOn: input.expiresOn || null, barcode: input.barcode || null, updatedBy: input.updatedBy, updatedAt: new Date() };
+  if (current) await db.update(familyPantryItems).set(values).where(eq(familyPantryItems.id, current.id));
+  else await db.insert(familyPantryItems).values({ listId: list.id, ...values });
+  await db.update(familyLists).set({ updatedAt: new Date() }).where(eq(familyLists.id, list.id));
+  return getFamilyPantryByCode(input.inviteCode);
+}
+
+export async function removeFamilyPantryItem(input: { inviteCode: string; name: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Ortak kiler veritabanı şu an kullanılamıyor.");
+  const list = (await db.select().from(familyLists).where(eq(familyLists.inviteCode, input.inviteCode)).limit(1))[0];
+  if (!list) throw new Error("Paylaşılan aile alanı bulunamadı.");
+  const items = await db.select().from(familyPantryItems).where(eq(familyPantryItems.listId, list.id));
+  const current = items.find((item) => item.name.toLocaleLowerCase("tr-TR") === input.name.trim().toLocaleLowerCase("tr-TR"));
+  if (current) await db.delete(familyPantryItems).where(eq(familyPantryItems.id, current.id));
+  return getFamilyPantryByCode(input.inviteCode);
 }

@@ -50,7 +50,19 @@ const sharedListInput = z.object({
   seedItems: z.array(z.string().trim().min(1).max(180)).max(80),
 });
 
-type ScannedIngredient = { name: string; category: string; confidence: "Yüksek" | "Orta"; quantity: number; unit: "adet" | "g" | "ml" | "paket"; quantityConfidence: "Yüksek" | "Orta" | "Düşük" };
+const sharedPantryItemInput = z.object({
+  inviteCode: z.string().trim().min(1).max(64),
+  name: z.string().trim().min(1).max(180),
+  quantity: z.number().finite().min(0).max(10_000),
+  unit: z.enum(["adet", "g", "ml", "paket"]),
+  expiresOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  barcode: z.string().trim().min(8).max(64).optional(),
+  updatedBy: z.string().trim().min(1).max(80),
+});
+
+const barcodeInput = z.object({ code: z.string().trim().regex(/^\d{8,14}$/, "Geçerli bir EAN/UPC barkodu okutun.") });
+
+type ScannedIngredient = { name: string; category: string; confidence: "Yüksek" | "Orta"; quantity: number; unit: "adet" | "g" | "ml" | "paket"; quantityConfidence: "Yüksek" | "Orta" | "Düşük"; lineTotal?: number };
 const fallbackScan: { ingredients: ScannedIngredient[]; suggestedPrompt: string; safetyNote: string } = {
   ingredients: [{ name: "Fotoğraftaki malzemeler", category: "Kontrol gerekli", confidence: "Orta", quantity: 1, unit: "adet", quantityConfidence: "Düşük" }],
   suggestedPrompt: "Fotoğraftaki malzemelerle 25 dakikada dengeli bir tarif öner.",
@@ -72,7 +84,7 @@ function normalizeEquipmentScan(content: string | null | undefined) {
 function normalizeScan(content: string | null | undefined, limit = 12) {
   if (!content) return fallbackScan;
   try {
-    const parsed = JSON.parse(content) as Partial<typeof fallbackScan>;
+    const parsed = JSON.parse(content) as Partial<typeof fallbackScan> & { storeName?: unknown; receiptDate?: unknown; receiptTotal?: unknown };
     const rawIngredients: unknown[] = Array.isArray(parsed.ingredients) ? parsed.ingredients : [];
     const ingredients = rawIngredients
       .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
@@ -83,6 +95,7 @@ function normalizeScan(content: string | null | undefined, limit = 12) {
         quantity: typeof item.quantity === "number" && Number.isFinite(item.quantity) && item.quantity > 0 ? Math.min(10_000, Math.round(item.quantity)) : 1,
         unit: (["adet", "g", "ml", "paket"] as const).includes(item.unit as "adet" | "g" | "ml" | "paket") ? item.unit as "adet" | "g" | "ml" | "paket" : "adet",
         quantityConfidence: (["Yüksek", "Orta", "Düşük"] as const).includes(item.quantityConfidence as "Yüksek" | "Orta" | "Düşük") ? item.quantityConfidence as "Yüksek" | "Orta" | "Düşük" : "Düşük",
+        lineTotal: typeof item.lineTotal === "number" && Number.isFinite(item.lineTotal) && item.lineTotal >= 0 ? Math.round(item.lineTotal * 100) / 100 : undefined,
       }))
       .filter((item) => item.name.length > 0)
       .slice(0, limit);
@@ -90,6 +103,9 @@ function normalizeScan(content: string | null | undefined, limit = 12) {
       ingredients: ingredients.length ? ingredients : fallbackScan.ingredients,
       suggestedPrompt: typeof parsed.suggestedPrompt === "string" && parsed.suggestedPrompt.trim() ? parsed.suggestedPrompt.trim().slice(0, 360) : fallbackScan.suggestedPrompt,
       safetyNote: typeof parsed.safetyNote === "string" && parsed.safetyNote.trim() ? parsed.safetyNote.trim().slice(0, 220) : fallbackScan.safetyNote,
+      storeName: typeof parsed.storeName === "string" && parsed.storeName.trim() ? parsed.storeName.trim().slice(0, 100) : undefined,
+      receiptDate: typeof parsed.receiptDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(parsed.receiptDate) ? parsed.receiptDate : undefined,
+      receiptTotal: typeof parsed.receiptTotal === "number" && Number.isFinite(parsed.receiptTotal) && parsed.receiptTotal >= 0 ? Math.round(parsed.receiptTotal * 100) / 100 : undefined,
     };
   } catch { return fallbackScan; }
 }
@@ -154,8 +170,8 @@ export const appRouter = router({
       const response = await invokeLLM({
         model: "gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "Sen LezzetAI'nin market fişi tanıma yardımcısısın. Fiş fotoğrafındaki yalnızca açıkça okunabilen tüketilebilir gıda ve içecek ürünlerini Türkçe listele. Fiyat, vergi, indirim, poşet, depozito, kart numarası, müşteri bilgisi, barkod ve ürün kodlarını yok say. Ürün miktarı/sayısı satırda açıkça görünmüyorsa quantity=1, unit='adet', quantityConfidence='Düşük' kullan. Görünmeyen ürünleri uydurma. Sadece geçerli JSON döndür: {ingredients:[{name,category,confidence,quantity,unit,quantityConfidence}],suggestedPrompt,safetyNote}. confidence yalnızca 'Yüksek' veya 'Orta'; unit yalnızca 'adet', 'g', 'ml' veya 'paket'; quantityConfidence yalnızca 'Yüksek', 'Orta' veya 'Düşük' olabilir. En çok 40 ürün döndür. safetyNote, kullanıcının listeyi ve miktarları kilerine eklemeden önce doğrulaması gerektiğini söylesin." },
-          { role: "user", content: [{ type: "text", text: "Bu market fişindeki gıda ürünlerini ve varsa miktarlarını topluca tanı. Sonuç kullanıcı onayıyla kilere eklenecek." }, { type: "image_url", image_url: { url: upload.url, detail: "high" } }] },
+          { role: "system", content: "Sen LezzetAI'nin market fişi tanıma yardımcısısın. Fiş fotoğrafındaki yalnızca açıkça okunabilen tüketilebilir gıda ve içecek ürünlerini Türkçe listele. Görünmeyen ürün, fiyat veya miktar uydurma. Sadece geçerli JSON döndür: {ingredients:[{name,category,confidence,quantity,unit,quantityConfidence,lineTotal?}],storeName?,receiptDate?,receiptTotal?,suggestedPrompt,safetyNote}. lineTotal yalnızca ürün satırının toplam fiyatı açıkça okunuyorsa sayısal değer olarak yaz; birim fiyat, vergi, indirim, poşet ve depozitoyu satıra ürün olarak ekleme. storeName yalnızca açıksa, receiptDate yalnızca YYYY-MM-DD biçimine güvenle dönüştürülebiliyorsa ve receiptTotal yalnızca genel toplam açıksa yaz; aksi halde ilgili alanı tamamen atla. Ürün miktarı/sayısı satırda açıkça görünmüyorsa quantity=1, unit='adet', quantityConfidence='Düşük' kullan. confidence yalnızca 'Yüksek' veya 'Orta'; unit yalnızca 'adet', 'g', 'ml' veya 'paket'; quantityConfidence yalnızca 'Yüksek', 'Orta' veya 'Düşük' olabilir. En çok 40 ürün döndür. safetyNote, kullanıcının ürünleri, fiyatları ve miktarları kilerine ya da geçmişine kaydetmeden önce doğrulaması gerektiğini söylesin." },
+          { role: "user", content: [{ type: "text", text: "Bu market fişindeki gıda ürünlerini; yalnızca net görünen miktar, satır fiyatı, mağaza ve tarih bilgileriyle tanı. Sonuçların tamamı kullanıcı onayıyla kaydedilecek." }, { type: "image_url", image_url: { url: upload.url, detail: "high" } }] },
         ],
         response_format: { type: "json_object" },
       });
@@ -181,6 +197,30 @@ export const appRouter = router({
     bootstrap: publicProcedure.input(sharedListInput).mutation(({ input }) => db.getOrCreateFamilyList(input)),
     get: publicProcedure.input(z.object({ inviteCode: z.string().trim().min(1).max(64) })).query(({ input }) => db.getFamilyListByCode(input.inviteCode)),
     updateItem: publicProcedure.input(z.object({ inviteCode: z.string().trim().min(1).max(64), name: z.string().trim().min(1).max(180), checked: z.boolean(), updatedBy: z.string().trim().min(1).max(80) })).mutation(({ input }) => db.updateFamilyListItem(input)),
+  }),
+  familyPantry: router({
+    get: publicProcedure.input(z.object({ inviteCode: z.string().trim().min(1).max(64) })).query(({ input }) => db.getFamilyPantryByCode(input.inviteCode)),
+    upsert: publicProcedure.input(sharedPantryItemInput).mutation(({ input }) => db.upsertFamilyPantryItem(input)),
+    remove: publicProcedure.input(z.object({ inviteCode: z.string().trim().min(1).max(64), name: z.string().trim().min(1).max(180) })).mutation(({ input }) => db.removeFamilyPantryItem(input)),
+  }),
+  barcode: router({
+    lookup: publicProcedure.input(barcodeInput).query(async ({ input }) => {
+      const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(input.code)}?fields=product_name,product_name_tr,brands,quantity,categories_tags,allergens_tags`;
+      const response = await fetch(url, { headers: { "User-Agent": "LezzetAI/1.0 (pantry barcode lookup)" } });
+      if (!response.ok) throw new Error("Barkod bilgisi şu an alınamadı.");
+      const data = await response.json() as { status?: number; product?: Record<string, unknown> };
+      const product = data.product ?? {};
+      const name = [product.product_name_tr, product.product_name].find((item): item is string => typeof item === "string" && item.trim().length > 0)?.trim();
+      return {
+        found: data.status === 1 && Boolean(name),
+        barcode: input.code,
+        name: name?.slice(0, 180) ?? "",
+        brand: typeof product.brands === "string" ? product.brands.slice(0, 100) : "",
+        quantityText: typeof product.quantity === "string" ? product.quantity.slice(0, 40) : "",
+        categories: Array.isArray(product.categories_tags) ? product.categories_tags.filter((item): item is string => typeof item === "string").slice(0, 4) : [],
+        allergens: Array.isArray(product.allergens_tags) ? product.allergens_tags.filter((item): item is string => typeof item === "string").slice(0, 8) : [],
+      };
+    }),
   }),
   voice: router({
     transcribe: publicProcedure.input(voiceInput).mutation(async ({ input, ctx }) => {

@@ -117,3 +117,10 @@
 - [x] Akıllı alışveriş listesini tek dokunuşla paylaşan ayrı ekran eklemek
 - [x] Arama ve malzeme metin girişlerine izinli sesli dikte denetimleri eklemek
 - [x] Son kullanma, fiş, alışveriş otomasyonu ve sesli giriş akışlarını test etmek
+- [x] Aile davet kodunu ortak kiler ve alışveriş çalışma alanına bağlamak
+- [x] Ortak kilerde aile üyelerinin ekleme, stok ve son kullanma değişikliklerini görünür kılmak
+- [x] Fişten kaydedilen fiyatları kategori bazlı harcama analizine dönüştürmek
+- [x] En yüksek harcama kategorilerini gösteren analiz ekranı eklemek
+- [x] Cihaz kamerasıyla çalışan barkod okuma ve ürün onayı akışı eklemek
+- [x] Barkodla eklenen ürünleri miktar, tarih ve kiler kaydıyla birleştirmek
+- [x] Ortak kiler, harcama analizi ve barkod akışlarını birim testleriyle doğrulamak

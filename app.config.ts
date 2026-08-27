@@ -98,6 +98,13 @@ const config: ExpoConfig = {
       },
     ],
     [
+      "expo-camera",
+      {
+        cameraPermission: "Paketli ürünlerin barkodunu taramak için $(PRODUCT_NAME) kameraya erişmek istiyor.",
+        recordAudioAndroid: false,
+      },
+    ],
+    [
       "expo-image-picker",
       {
         cameraPermission: "Malzemeleri tanımak için $(PRODUCT_NAME) kameraya erişmek istiyor.",
