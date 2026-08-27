@@ -1,10 +1,11 @@
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, Share, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { LocalizedText as Text } from "@/components/localized-text";
 import { ScreenContainer } from "@/components/screen-container";
 import { buildGroceryList, getRecipe } from "@/lib/lezzet-data";
+import { buildWeeklyPlanShareMessage } from "@/lib/meal-planning";
 import { useLezzet } from "@/lib/lezzet-context";
 import { MotionReveal } from "@/components/motion-reveal";
 import { getCuisineProfile } from "@/lib/cuisine-locale";
@@ -18,9 +19,13 @@ export default function PlanScreen() {
   const days = cuisine.days;
   const estimate = buildGroceryList(weeklyPlan.map((item) => item.recipeId)).reduce((sum, item) => sum + marketPrices[profile.locale][getMarketCategoryKey(item.name)], 0);
   const urgentPantry = pantry.filter((item) => (pantryMeta[item]?.expiresInDays ?? 7) <= 2);
+  const sharePlan = async () => {
+    const items = weeklyPlan.map((item) => { const recipe = getRecipe(item.recipeId); return { day: item.day, meal: item.meal, title: recipe.title, minutes: recipe.minutes }; });
+    await Share.share({ title: "LezzetAI haftalık yemek planı", message: buildWeeklyPlanShareMessage(items) });
+  };
 
   return <ScreenContainer className="flex-1" containerClassName="bg-background"><ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-    <View><Text style={styles.eyebrow}>{cuisine.ui.planEyebrow}</Text><Text style={styles.title}>{cuisine.ui.planTitle}</Text></View>
+    <View style={styles.titleRow}><View style={{ flex: 1 }}><Text style={styles.eyebrow}>{cuisine.ui.planEyebrow}</Text><Text style={styles.title}>{cuisine.ui.planTitle}</Text></View><Pressable onPress={sharePlan} style={({ pressed }) => [styles.sharePlan, pressed && { opacity: 0.7 }]}><IconSymbol name="paperplane.fill" size={19} color="#1E4D3A" /><Text style={styles.sharePlanText}>Paylaş</Text></Pressable></View>
     <MotionReveal delay={45}><View style={styles.dayStrip}>{days.map((day, index) => <View key={day} style={[styles.day, index === 0 && styles.dayActive]}><Text style={[styles.dayName, index === 0 && styles.dayNameActive]}>{day}</Text><Text style={[styles.dayNumber, index === 0 && styles.dayNumberActive]}>{18 + index}</Text></View>)}</View></MotionReveal>
     <MotionReveal delay={85}><View style={styles.summary}><View style={styles.summaryIcon}><IconSymbol name="sparkles" size={22} color="#1E4D3A" /></View><View style={{ flex: 1 }}><Text style={styles.summaryTitle}>{cuisine.ui.regionalPlan} · {cuisine.region}</Text><Text style={styles.summaryText}>{cuisine.planNote} {profile.goal} hedefin ve kiler önceliklerin korunur.</Text></View></View></MotionReveal>
     <MotionReveal delay={95}><View style={styles.seasonCard}><View style={styles.seasonHead}><View><Text style={styles.seasonKicker}>{getSeasonName(profile.locale, season).toLocaleUpperCase(profile.locale)}</Text><Text style={styles.seasonTitle}>{seasonalPackage.title}</Text></View><IconSymbol name="leaf.fill" size={19} color="#1E4D3A" /></View><Text style={styles.seasonText}>{seasonalPackage.subtitle}</Text><Text style={styles.seasonIngredients}>{seasonalPackage.ingredients.join(" · ")}</Text></View></MotionReveal>
@@ -36,7 +41,7 @@ export default function PlanScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 20, paddingBottom: 34, gap: 20 }, eyebrow: { color: "#6B756F", fontSize: 10, fontWeight: "900", letterSpacing: 1.35 }, title: { color: "#1E2521", fontSize: 32, lineHeight: 38, fontWeight: "800", letterSpacing: -1, marginTop: 4 },
+  content: { padding: 20, paddingBottom: 34, gap: 20 }, titleRow: { flexDirection: "row", alignItems: "center", gap: 10 }, eyebrow: { color: "#6B756F", fontSize: 10, fontWeight: "900", letterSpacing: 1.35 }, title: { color: "#1E2521", fontSize: 32, lineHeight: 38, fontWeight: "800", letterSpacing: -1, marginTop: 4 }, sharePlan: { minHeight: 38, paddingHorizontal: 10, borderRadius: 12, alignItems: "center", justifyContent: "center", flexDirection: "row", gap: 5, backgroundColor: "#DDE8DA" }, sharePlanText: { color: "#1E4D3A", fontSize: 10, fontWeight: "900" },
   dayStrip: { flexDirection: "row", justifyContent: "space-between", backgroundColor: "#FFFFFF", borderRadius: 22, padding: 8, borderWidth: 1, borderColor: "#EAE7E0", shadowColor: "#1E2521", shadowOpacity: 0.04, shadowRadius: 9, shadowOffset: { width: 0, height: 4 }, elevation: 1 }, day: { flex: 1, alignItems: "center", gap: 4, paddingVertical: 8, borderRadius: 15 }, dayActive: { backgroundColor: "#1E4D3A" }, dayName: { fontSize: 10, color: "#6B756F", fontWeight: "800" }, dayNameActive: { color: "#DDE8DA" }, dayNumber: { color: "#1E2521", fontSize: 15, fontWeight: "800" }, dayNumberActive: { color: "#FFFFFF" },
   summary: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#DDE8DA", borderRadius: 22, padding: 16, borderWidth: 1, borderColor: "#C9DCC4" }, summaryIcon: { width: 43, height: 43, borderRadius: 15, backgroundColor: "#FBF8F2", alignItems: "center", justifyContent: "center" }, summaryTitle: { color: "#1E2521", fontWeight: "800", fontSize: 15 }, summaryText: { color: "#52705E", fontSize: 12, lineHeight: 18, marginTop: 2 }, seasonCard: { gap: 5, padding: 14, borderRadius: 19, backgroundColor: "#EEF5EC", borderWidth: 1, borderColor: "#D2E4CF" }, seasonHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }, seasonKicker: { color: "#52705E", fontSize: 9, fontWeight: "900", letterSpacing: 1 }, seasonTitle: { color: "#1E2521", fontSize: 15, fontWeight: "900", marginTop: 2 }, seasonText: { color: "#52705E", fontSize: 11, lineHeight: 16, fontWeight: "600" }, seasonIngredients: { color: "#1E4D3A", fontSize: 10, lineHeight: 15, fontWeight: "900" }, cuisineCard: { gap: 5, padding: 14, borderRadius: 18, backgroundColor: "#FFF4EA", borderWidth: 1, borderColor: "#F3D4BC" }, cuisineLabel: { color: "#9D4F20", fontSize: 10, fontWeight: "900", letterSpacing: 1 }, cuisineText: { color: "#784A28", fontSize: 12, fontWeight: "800" }, cuisineTools: { color: "#9C6B46", fontSize: 10, lineHeight: 14, fontWeight: "700" },
   autoPlan: { flexDirection: "row", alignItems: "center", gap: 11, padding: 15, borderRadius: 22, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#C9DCC4", shadowColor: "#1E4D3A", shadowOpacity: 0.06, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 2 }, autoPlanIcon: { width: 40, height: 40, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: "#1E4D3A" }, autoPlanTitle: { color: "#1E2521", fontSize: 14, fontWeight: "800" }, autoPlanText: { color: "#6B756F", fontSize: 11, lineHeight: 16, marginTop: 2 },

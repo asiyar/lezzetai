@@ -128,3 +128,6 @@
 - [x] Yapay zekâ servisinin mevcut bağlantısını ve yayın öncesi çalışma modelini doğrulamak
 - [x] Kilerdeki malzemelere göre haftalık yemek fikirlerini görünür bir plana dönüştürmek
 - [x] Yeni kiler odaklı planlama akışını test etmek ve sürüm kaydına almak
+- [x] Kiler odaklı haftalık fikir planına isteğe bağlı diyet filtresi eklemek
+- [x] Haftalık planı sistem paylaşım menüsüne aktaracak mesajlaşma paylaşım eylemi eklemek
+- [x] Diyet filtresi ve paylaşım akışını test ederek sürüm kaydına almak

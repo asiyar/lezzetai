@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildShoppingShareMessage, uniqueShoppingItems } from "../lib/meal-planning";
+import { buildShoppingShareMessage, buildWeeklyPlanShareMessage, uniqueShoppingItems } from "../lib/meal-planning";
 import { buildPersonalWeekPlan, findPersonalMenuAlternative } from "../lib/personal-menu";
 import { getEquipmentAdvice } from "../lib/equipment-advice";
 import { getRecipeEstimate, scaleIngredientList } from "../lib/culinary-utils";
@@ -33,6 +33,12 @@ describe("LezzetAI haftalık planlama", () => {
     expect(message).toContain("Haftasonu alışverişi");
     expect(message).toContain("✓ Domates");
     expect(message).toContain("○ Yoğurt");
+  });
+
+  it("haftalık yemek planını gün, öğün ve süreyle mesajlaşmaya uygun bir metne dönüştürür", () => {
+    const message = buildWeeklyPlanShareMessage([{ day: "Pzt", meal: "Akşam", title: "Mercimek Çorbası", minutes: 32 }]);
+    expect(message).toContain("Pzt Akşam: Mercimek Çorbası (32 dk)");
+    expect(message).toContain("LezzetAI ile hazırlandı.");
   });
 
   it("kişisel haftalık menüde yedi gün üretir ve belirlenen alerjeni içeren tarifi dışarıda bırakır", () => {
