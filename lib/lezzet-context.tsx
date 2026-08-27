@@ -1,12 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type PropsWithChildren } from "react";
 
-import { buildGroceryList, buildPersonalWeeklyPlan, getPersonalRecipeAlternative, initialPantry, initialWeeklyPlan } from "@/lib/lezzet-data";
+import { buildGroceryList, buildMissingGroceryList, buildPersonalWeeklyPlan, getPersonalRecipeAlternative, initialPantry, initialWeeklyPlan } from "@/lib/lezzet-data";
 import { defaultCuisineLocale, getCuisineProfile, isCuisineLocale, type CuisineLocale } from "@/lib/cuisine-locale";
 import { getDefaultMarketPrices, type DietaryPreference, type MarketCategoryKey } from "@/lib/seasonal-market";
 import { defaultPantryStockMeta, findConsumablePantryItems, getDaysUntilDate, getLowStockShoppingSeeds, getStockUsageAmount, type PantryStockMeta, type StockUnit } from "@/lib/pantry-insights";
 import type { ReceiptPurchase } from "@/lib/spending-insights";
 import type { WearableActivity } from "@/lib/wearable-sync";
+import { createSamplePantryDraft, normalizePantryDraft, snapshotPantry, type PantryDraftItem, type PantrySnapshot } from "@/lib/pantry-sample";
 
 type GroceryItem = { name: string; checked: boolean; updatedBy?: string; updatedAt?: string };
 type WeeklyMeal = { day: string; meal: string; recipeId: string };
@@ -47,7 +48,9 @@ type LezzetContextValue = {
   addPantryItem: (name: string) => void;
   addPantryItems: (items: { name: string; quantity?: number; unit?: StockUnit; expiresOn?: string }[]) => void;
   resetPantry: () => void;
-  loadRegionalSamplePantry: () => void;
+  undoPantryReset: () => boolean;
+  dismissPantryUndo: () => void;
+  loadRegionalSamplePantry: (items?: PantryDraftItem[]) => void;
   removePantryItem: (name: string) => void;
   toggleFavoriteIngredient: (name: string) => void;
   setExpiryPriority: (name: string, days: number) => void;
@@ -69,12 +72,13 @@ type LezzetContextValue = {
   toggleGrocery: (name: string) => void;
   addRecipeToPlan: (id: string) => void;
   createGroceryFromPlan: () => void;
+  createMissingGroceryFromPlan: () => string[];
   addLowStockToGrocery: () => string[];
   createPersonalWeeklyPlan: () => void;
   applyPantryWeeklyIdeas: (recipeIds: string[]) => void;
   replaceWeeklyMeal: (day: string, currentRecipeId: string) => void;
   updateProfile: (patch: Partial<Profile>) => void;
-  completeOnboarding: (profile: Profile, samplePantry?: string[]) => void;
+  completeOnboarding: (profile: Profile, samplePantry?: PantryDraftItem[]) => void;
 };
 
 const STORAGE_KEY = "lezzetai:state:v1";
@@ -99,6 +103,7 @@ export function LezzetProvider({ children }: PropsWithChildren) {
   const [kitchenTools, setKitchenTools] = useState<string[]>([]);
   const [sharedListInviteCode, setSharedListInviteCode] = useState<string | null>(null);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const [pantryUndo, setPantryUndo] = useState<PantrySnapshot | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -206,6 +211,16 @@ export function LezzetProvider({ children }: PropsWithChildren) {
   }, []);
 
   const createGroceryFromPlan = useCallback(() => setGrocery(buildGroceryList(weeklyPlan.map((item) => item.recipeId))), [weeklyPlan]);
+  const createMissingGroceryFromPlan = useCallback(() => {
+    const missing = buildMissingGroceryList(weeklyPlan.map((item) => item.recipeId), pantry);
+    if (!missing.length) return [];
+    setGrocery((current) => {
+      const existing = new Set(current.map((item) => item.name.toLocaleLowerCase("tr-TR")));
+      const additions = missing.filter((item) => !existing.has(item.name.toLocaleLowerCase("tr-TR"))).map((item) => ({ ...item, updatedBy: "Haftalık plan", updatedAt: "az önce" }));
+      return additions.length ? [...current, ...additions] : current;
+    });
+    return missing.map((item) => item.name);
+  }, [pantry, weeklyPlan]);
   const addLowStockToGrocery = useCallback(() => {
     const seeds = getLowStockShoppingSeeds(pantry, pantryMeta);
     if (!seeds.length) return seeds;
@@ -226,25 +241,36 @@ export function LezzetProvider({ children }: PropsWithChildren) {
   }), [kitchenTools, pantry, pantryMeta, profile.allergies, profile.dietaryPreferences, profile.goal, profile.locale]);
   const updateProfile = useCallback((patch: Partial<Profile>) => setProfile((current) => ({ ...current, ...patch })), []);
   const resetPantry = useCallback(() => {
+    setPantryUndo(snapshotPantry(pantry, pantryMeta));
     setPantry([]);
     setPantryMeta({});
-  }, []);
-  const loadRegionalSamplePantry = useCallback(() => {
-    const samplePantry = Array.from(getCuisineProfile(profile.locale).pantryHighlights);
+  }, [pantry, pantryMeta]);
+  const undoPantryReset = useCallback(() => {
+    if (!pantryUndo) return false;
+    setPantry(pantryUndo.pantry);
+    setPantryMeta(pantryUndo.pantryMeta);
+    setPantryUndo(null);
+    return true;
+  }, [pantryUndo]);
+  const dismissPantryUndo = useCallback(() => setPantryUndo(null), []);
+  const loadRegionalSamplePantry = useCallback((items?: PantryDraftItem[]) => {
+    const sampleItems = normalizePantryDraft(items ?? createSamplePantryDraft(getCuisineProfile(profile.locale).pantryHighlights));
+    const samplePantry = sampleItems.map((item) => item.name);
     setPantry(samplePantry);
-    setPantryMeta(Object.fromEntries(samplePantry.map((name) => [name, { ...defaultPantryStockMeta, quantity: 1, unit: "adet" as const }])));
+    setPantryMeta(Object.fromEntries(sampleItems.map((item) => [item.name, { ...defaultPantryStockMeta, quantity: item.quantity, unit: item.unit }])));
     setWeeklyPlan(buildPersonalWeeklyPlan({ pantry: samplePantry, favoriteIngredients: [], goal: profile.goal, allergies: profile.allergies, kitchenTools, locale: profile.locale, dietaryPreferences: profile.dietaryPreferences }));
   }, [kitchenTools, profile.allergies, profile.dietaryPreferences, profile.goal, profile.locale]);
-  const completeOnboarding = useCallback((nextProfile: Profile, samplePantry: string[] = []) => {
-    const cleanPantry = Array.from(new Set(samplePantry.map((item) => item.trim()).filter(Boolean))).slice(0, 12);
+  const completeOnboarding = useCallback((nextProfile: Profile, samplePantry: PantryDraftItem[] = []) => {
+    const sampleItems = normalizePantryDraft(samplePantry);
+    const cleanPantry = sampleItems.map((item) => item.name);
     setProfile(nextProfile);
     setPantry(cleanPantry);
-    setPantryMeta(Object.fromEntries(cleanPantry.map((name) => [name, { ...defaultPantryStockMeta, quantity: 1, unit: "adet" as const }])));
+    setPantryMeta(Object.fromEntries(sampleItems.map((item) => [item.name, { ...defaultPantryStockMeta, quantity: item.quantity, unit: item.unit }])));
     setWeeklyPlan(buildPersonalWeeklyPlan({ pantry: cleanPantry, favoriteIngredients: [], goal: nextProfile.goal, allergies: nextProfile.allergies, kitchenTools: [], locale: nextProfile.locale, dietaryPreferences: nextProfile.dietaryPreferences }));
     setOnboardingComplete(true);
   }, []);
 
-  const value = useMemo(() => ({ favorites, pantry, pantryMeta, scanHistory, familyMembers, familyProfiles, recipeFeedback, journalEntries, wearableActivity, weeklyBudget, marketPrices, receiptPurchases, kitchenTools, sharedListInviteCode, grocery, weeklyPlan, profile, onboardingComplete, hydrated, toggleFavorite, addPantryItem, addPantryItems, resetPantry, loadRegionalSamplePantry, removePantryItem, toggleFavoriteIngredient, setExpiryPriority, setExpiryDate, updatePantryStock, consumeRecipeFromPantry, recordScan, removeScan, addFamilyMember, addFamilyProfile, setRecipeFeedback, addJournalEntry, setWearableActivity, setWeeklyBudget, updateMarketPrice, recordReceiptPurchases, setSharedListInviteCode, toggleKitchenTool, toggleGrocery, addRecipeToPlan, createGroceryFromPlan, addLowStockToGrocery, createPersonalWeeklyPlan, applyPantryWeeklyIdeas, replaceWeeklyMeal, updateProfile, completeOnboarding }), [addFamilyMember, addFamilyProfile, addJournalEntry, addLowStockToGrocery, addPantryItem, addPantryItems, addRecipeToPlan, applyPantryWeeklyIdeas, completeOnboarding, consumeRecipeFromPantry, createGroceryFromPlan, createPersonalWeeklyPlan, familyMembers, familyProfiles, favorites, grocery, hydrated, journalEntries, kitchenTools, loadRegionalSamplePantry, marketPrices, onboardingComplete, pantry, pantryMeta, profile, receiptPurchases, recordReceiptPurchases, recipeFeedback, recordScan, removePantryItem, removeScan, replaceWeeklyMeal, resetPantry, setExpiryDate, setExpiryPriority, setRecipeFeedback, setSharedListInviteCode, setWearableActivity, toggleFavorite, toggleFavoriteIngredient, toggleGrocery, toggleKitchenTool, updateMarketPrice, updatePantryStock, updateProfile, wearableActivity, weeklyBudget, weeklyPlan]);
+  const value = useMemo(() => ({ favorites, pantry, pantryMeta, scanHistory, familyMembers, familyProfiles, recipeFeedback, journalEntries, wearableActivity, weeklyBudget, marketPrices, receiptPurchases, kitchenTools, sharedListInviteCode, grocery, weeklyPlan, profile, onboardingComplete, hydrated, toggleFavorite, addPantryItem, addPantryItems, resetPantry, undoPantryReset, dismissPantryUndo, loadRegionalSamplePantry, removePantryItem, toggleFavoriteIngredient, setExpiryPriority, setExpiryDate, updatePantryStock, consumeRecipeFromPantry, recordScan, removeScan, addFamilyMember, addFamilyProfile, setRecipeFeedback, addJournalEntry, setWearableActivity, setWeeklyBudget, updateMarketPrice, recordReceiptPurchases, setSharedListInviteCode, toggleKitchenTool, toggleGrocery, addRecipeToPlan, createGroceryFromPlan, createMissingGroceryFromPlan, addLowStockToGrocery, createPersonalWeeklyPlan, applyPantryWeeklyIdeas, replaceWeeklyMeal, updateProfile, completeOnboarding }), [addFamilyMember, addFamilyProfile, addJournalEntry, addLowStockToGrocery, addPantryItem, addPantryItems, addRecipeToPlan, applyPantryWeeklyIdeas, completeOnboarding, consumeRecipeFromPantry, createGroceryFromPlan, createMissingGroceryFromPlan, createPersonalWeeklyPlan, dismissPantryUndo, familyMembers, familyProfiles, favorites, grocery, hydrated, journalEntries, kitchenTools, loadRegionalSamplePantry, marketPrices, onboardingComplete, pantry, pantryMeta, profile, receiptPurchases, recordReceiptPurchases, recipeFeedback, recordScan, removePantryItem, removeScan, replaceWeeklyMeal, resetPantry, setExpiryDate, setExpiryPriority, setRecipeFeedback, setSharedListInviteCode, setWearableActivity, toggleFavorite, toggleFavoriteIngredient, toggleGrocery, toggleKitchenTool, undoPantryReset, updateMarketPrice, updatePantryStock, updateProfile, wearableActivity, weeklyBudget, weeklyPlan]);
 
   return <LezzetContext.Provider value={value}>{children}</LezzetContext.Provider>;
 }

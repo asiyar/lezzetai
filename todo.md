@@ -143,3 +143,7 @@
 - [x] Profilde seçili bölgenin örnek kiler ürünlerini yeniden yükleme denetimi eklemek
 - [x] Örnek kiler kurulunca kullanıcı tercihleriyle otomatik ilk hafta planı oluşturmak
 - [x] Kiler yönetimi ve ilk hafta planı akışlarını test edip sürüm kaydına almak
+- [x] Kiler sıfırlama sonrası kısa süreli geri alma seçeneği eklemek
+- [x] İlk hafta planındaki eksik malzemelerden otomatik alışveriş listesi oluşturmak
+- [x] Örnek kiler ürünlerini yüklemeden önce düzenlenebilir önizleme ekranı eklemek
+- [x] Kiler koruması, alışveriş ve örnek kiler düzenleme akışlarını test edip sürüm kaydına almak

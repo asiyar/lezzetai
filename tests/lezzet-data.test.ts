@@ -7,7 +7,7 @@ import { getRecipeEstimate, scaleIngredientList } from "../lib/culinary-utils";
 import { getAdaptiveTargets } from "../lib/wearable-utils";
 import { getCuisineProfile } from "../lib/cuisine-locale";
 import { formatLocalCurrency, getCurrentSeason, getDefaultMarketPrices, getDirectAllergenMatches, getMarketCategory, getMarketCategoryKey, getSeasonalPackage, recipeMatchesDiet } from "../lib/seasonal-market";
-import { getDaysUntilDate, getEffectiveExpiryDays, getLowStockShoppingSeeds, getPantryOverview, getStockUsageAmount, ingredientMatchesPantry } from "../lib/pantry-insights";
+import { findMissingIngredients, getDaysUntilDate, getEffectiveExpiryDays, getLowStockShoppingSeeds, getPantryOverview, getStockUsageAmount, ingredientMatchesPantry } from "../lib/pantry-insights";
 import { kitchenToolCatalog } from "../lib/kitchen-tools";
 import { regionalRecipeExpansion } from "../lib/regional-recipe-expansion";
 import { summarizeReceiptSpending } from "../lib/spending-insights";
@@ -16,6 +16,7 @@ import { buildPantryWeekIdeas } from "../lib/pantry-weekly-ideas";
 import { getPantryWeeklyCopy } from "../lib/pantry-weekly-copy";
 import { getOnboardingCopy } from "../lib/onboarding-copy";
 import { getOnboardingSampleCopy } from "../lib/onboarding-sample-copy";
+import { createSamplePantryDraft, normalizePantryDraft, snapshotPantry } from "../lib/pantry-sample";
 
 describe("LezzetAI haftalık planlama", () => {
   it("planlanan öğünlerde yinelenen malzemeleri tek alışveriş kalemine indirger", () => {
@@ -236,5 +237,22 @@ describe("LezzetAI haftalık planlama", () => {
       expect(copy.emptyTitle.length).toBeGreaterThan(4);
       expect(copy.addTitle).not.toBe(copy.emptyTitle);
     });
+  });
+
+  it("haftalık plan için yalnızca kilerde olmayan malzemeleri alışveriş listesine ayırır", () => {
+    const missing = findMissingIngredients(["Kırmızı mercimek", "Soğan", "Havuç", "Kimyon", "Limon"], ["Kırmızı mercimek", "Limon"]);
+    expect(missing).toEqual(["Soğan", "Havuç", "Kimyon"]);
+  });
+
+  it("örnek kiler taslağında ürünleri ve miktarları düzenlenebilir, tekrarları güvenle temizler", () => {
+    expect(createSamplePantryDraft(["Bulgur", "Mercimek"])).toEqual([{ name: "Bulgur", quantity: 1, unit: "adet" }, { name: "Mercimek", quantity: 1, unit: "adet" }]);
+    expect(normalizePantryDraft([{ name: " Bulgur ", quantity: 4 }, { name: "bulgur", quantity: 8 }, { name: "", quantity: 2 }, { name: "Domates", quantity: 0 }])).toEqual([{ name: "Bulgur", quantity: 4, unit: "adet" }, { name: "Domates", quantity: 1, unit: "adet" }]);
+  });
+
+  it("kiler sıfırlama geri alması için stok anlık görüntüsünü bağımsız olarak saklar", () => {
+    const snapshot = snapshotPantry(["Domates"], { Domates: { favorite: false, expiresInDays: 3, quantity: 4, unit: "adet", lowStockThreshold: 1, uses: 0 } });
+    snapshot.pantry.push("Limon");
+    expect(snapshot.pantry).toEqual(["Domates", "Limon"]);
+    expect(snapshot.pantryMeta.Domates.quantity).toBe(4);
   });
 });

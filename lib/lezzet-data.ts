@@ -3,6 +3,7 @@ import type { ImageSourcePropType } from "react-native";
 import { getCuisineProfile, type CuisineLocale } from "@/lib/cuisine-locale";
 import { getEquipmentAdvice as getAdvice } from "@/lib/equipment-advice";
 import { uniqueShoppingItems } from "@/lib/meal-planning";
+import { findMissingIngredients } from "@/lib/pantry-insights";
 import { buildPersonalWeekPlan, findPersonalMenuAlternative } from "@/lib/personal-menu";
 import { getCurrentSeason, recipeMatchesDiet, type DietaryPreference, type DietaryTag, type Season } from "@/lib/seasonal-market";
 import { regionalRecipeExpansion } from "@/lib/regional-recipe-expansion";
@@ -90,4 +91,5 @@ export function buildPersonalWeeklyPlan(input: { pantry: string[]; favoriteIngre
 export function getPersonalRecipeAlternative(input: { pantry: string[]; favoriteIngredients: string[]; goal: string; allergies: string[]; kitchenTools: string[]; locale?: CuisineLocale; dietaryPreferences?: DietaryPreference[]; season?: Season }, currentRecipeId: string, occupiedRecipeIds: string[]) { return findPersonalMenuAlternative(getRecipesForPreferences(getCuisineProfile(input.locale).code, input.dietaryPreferences, input.season), input, currentRecipeId, occupiedRecipeIds); }
 export function getEquipmentAdvice(recipe: Recipe, kitchenTools: string[]) { return getAdvice(recipe, kitchenTools); }
 export function buildGroceryList(recipeIds: string[]) { return uniqueShoppingItems(recipeIds.map((id) => recipes.find((item) => item.id === id)).filter((item): item is Recipe => Boolean(item))).map((name) => ({ name, checked: false })); }
+export function buildMissingGroceryList(recipeIds: string[], pantry: string[]) { return findMissingIngredients(uniqueShoppingItems(recipeIds.map((id) => recipes.find((item) => item.id === id)).filter((item): item is Recipe => Boolean(item))), pantry).map((name) => ({ name, checked: false })); }
 export function getRecipe(id?: string) { return recipes.find((item) => item.id === id) ?? getRecipesForLocale("tr-TR")[0]; }

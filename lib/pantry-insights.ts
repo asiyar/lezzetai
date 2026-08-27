@@ -45,6 +45,10 @@ export function ingredientMatchesPantry(ingredient: string, pantryName: string) 
   return pantryWords.some((word) => ingredientWords.includes(word)) || ingredientWords.some((word) => pantryWords.includes(word));
 }
 
+export function findMissingIngredients(ingredients: string[], pantry: string[]) {
+  return ingredients.filter((ingredient) => !pantry.some((item) => ingredientMatchesPantry(ingredient, item)));
+}
+
 export function getRecipePantryMatches(recipe: RecipeLike, pantry: string[]) {
   const matched = pantry.filter((item) => recipe.ingredients.some((ingredient) => ingredientMatchesPantry(ingredient, item)));
   return { matched, matchCount: matched.length, canCook: matched.length >= Math.min(2, recipe.ingredients.length) };
