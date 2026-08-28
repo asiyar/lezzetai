@@ -166,3 +166,8 @@
 - [x] Açık deneme koşulları, aylık-yıllık plan seçimi, yönetim ve geri yükleme eylemleri bulunan paywall eklemek
 - [ ] StoreKit ve Google Play Billing ürünleri için gerçek satın alma entegrasyonunu yapılandırmak
 - [ ] Abonelik, erişilebilirlik, gizlilik ve mağaza yayın akışlarını test edip inceleme kontrol listesi hazırlamak
+- [x] Geliştirme ortamında açık etiketli mock satın alma akışını bağlamak
+- [x] Eğitim ve paywall geçişlerine ölçülü animasyon eklemek
+- [x] Ücretsiz deneme CTA’sına erişilebilir parlama ve vurgu animasyonu eklemek
+- [x] Mock satın alma güvenlik kuralını test etmek
+- [ ] Gerçek StoreKit ve Google Play Billing ürünlerini mağaza hesaplarına bağlamak

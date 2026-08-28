@@ -291,3 +291,14 @@ describe("LezzetAI haftalık planlama", () => {
     expect(annual).toContain("seçtiğin yıllık");
   });
 });
+
+
+describe("abonelik demo güvenliği", () => {
+  it("mock satın almayı yalnızca test ortamında açık true değeriyle etkinleştirir", async () => {
+    const { isMockPurchaseEnabled } = await import("../lib/subscription-offer");
+    expect(isMockPurchaseEnabled("true", "test")).toBe(true);
+    expect(isMockPurchaseEnabled("false", "test")).toBe(false);
+    expect(isMockPurchaseEnabled("true", "production")).toBe(false);
+  });
+});
+
