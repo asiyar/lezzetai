@@ -155,3 +155,14 @@
 - [x] Şablon yükleme öncesi malzeme ve genel besin özeti önizlemesi eklemek
 - [x] Kiler şablonlarını mesajlaşma uygulamalarında paylaşma eylemi eklemek
 - [x] Şablon keşif, özet ve paylaşım akışlarını test edip sürüm kaydına almak
+- [ ] Apple ve Google geliştirici hesap erişimi ile yayın sözleşmelerini denetlemek
+- [ ] Gizlilik, destek ve veri silme istekleri için herkese açık yayın sayfalarını hazırlamak
+- [ ] Apple App Store ve Google Play mağaza listeleme metinleri ile görsel varlıklarını hazırlamak
+- [ ] GitHub deposunu oluşturup yayın materyallerini güvenli biçimde göndermek
+- [ ] Android paket ve iOS arşiv gönderimi için zorunlu yapılandırmaları doğrulamak
+- [ ] Kullanıcı onayıyla mağaza hesaplarında yayın bilgilerini girip sürüm gönderimini başlatmak
+- [x] Apple ve Google abonelik, deneme, gizlilik ve inceleme kurallarını resmî kaynaklardan denetlemek
+- [x] İlk kullanım eğitimini ürün değerini şeffaf anlatan abonelik öncesi deneyime dönüştürmek
+- [x] Açık deneme koşulları, aylık-yıllık plan seçimi, yönetim ve geri yükleme eylemleri bulunan paywall eklemek
+- [ ] StoreKit ve Google Play Billing ürünleri için gerçek satın alma entegrasyonunu yapılandırmak
+- [ ] Abonelik, erişilebilirlik, gizlilik ve mağaza yayın akışlarını test edip inceleme kontrol listesi hazırlamak

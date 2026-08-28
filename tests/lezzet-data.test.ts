@@ -17,6 +17,7 @@ import { getPantryWeeklyCopy } from "../lib/pantry-weekly-copy";
 import { getOnboardingCopy } from "../lib/onboarding-copy";
 import { getOnboardingSampleCopy } from "../lib/onboarding-sample-copy";
 import { buildPantryTemplateShareMessage, createPantryTemplate, createSamplePantryDraft, getPantryNutritionSummary, normalizePantryDraft, normalizeTemplateTags, snapshotPantry } from "../lib/pantry-sample";
+import { getTrialDisclosure, isTransparentTrialDisclosure } from "../lib/subscription-offer";
 
 describe("LezzetAI haftalık planlama", () => {
   it("planlanan öğünlerde yinelenen malzemeleri tek alışveriş kalemine indirger", () => {
@@ -279,5 +280,14 @@ describe("LezzetAI haftalık planlama", () => {
     const message = buildPantryTemplateShareMessage({ id: "template-1", name: "Hafta içi", tags: ["hızlı", "vegan"], createdAt: "2026-08-27", items: [{ name: "Mercimek", quantity: 2, unit: "paket" }] });
     expect(message).toContain("#hızlı #vegan");
     expect(message).toContain("• 2 paket Mercimek");
+  });
+
+  it("ücretsiz denemede yalnızca seçilen planın yenileneceğini şeffaf biçimde açıklar", () => {
+    const monthly = getTrialDisclosure("monthly");
+    const annual = getTrialDisclosure("annual");
+    expect(isTransparentTrialDisclosure(monthly)).toBe(true);
+    expect(isTransparentTrialDisclosure(annual)).toBe(true);
+    expect(monthly).toContain("seçtiğin aylık");
+    expect(annual).toContain("seçtiğin yıllık");
   });
 });

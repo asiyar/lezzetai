@@ -34,8 +34,11 @@ function AppNavigator() {
     return <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#FBF8F2" }}><ActivityIndicator size="small" color="#1E4D3A" /></View>;
   }
   return (
-    <Stack key={onboardingComplete ? "app" : "onboarding"} initialRouteName={onboardingComplete ? "(tabs)" : "onboarding"} screenOptions={{ headerShown: false }}>
+    <Stack key={onboardingComplete ? "subscription" : "onboarding"} initialRouteName={onboardingComplete ? "subscription-showcase" : "onboarding"} screenOptions={{ headerShown: false }}>
       <Stack.Screen name="onboarding" />
+      <Stack.Screen name="subscription-showcase" />
+      <Stack.Screen name="subscription-paywall" />
+      <Stack.Screen name="terms" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="cuisine-region" />
       <Stack.Screen name="diet-preferences" />
